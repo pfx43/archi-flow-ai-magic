@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
@@ -18,6 +17,9 @@ export const MainLayout = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme | null>(themes[0]);
+  const [modelProvider, setModelProvider] = useState<'doubao' | 'openrouter'>('doubao');
+  const [openRouterApiKey, setOpenRouterApiKey] = useState('');
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o');
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -43,7 +45,7 @@ export const MainLayout = () => {
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
         // Middle mouse button or Alt+click for panning
-        if ((evt instanceof MouseEvent && evt.button === 1) || evt.altKey) {
+        if (evt instanceof MouseEvent && (evt.button === 1 || evt.altKey)) {
             isPanning = true;
             this.selection = false; // Disable selection during pan
             lastPosX = evt.clientX;
@@ -157,6 +159,44 @@ export const MainLayout = () => {
     }
   };
 
+  const callOpenRouterApi = async (content: string) => {
+    if (!openRouterApiKey) {
+      throw new Error('OpenRouter API Key is not set.');
+    }
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openRouterApiKey}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'ArchiFlow',
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            {
+              role: 'user',
+              content: `请分析以下内容并提取出关键的架构组件，以JSON格式返回，包含节点名称和它们之间的关系：${content}`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('OpenRouter API call failed:', error);
+      throw error;
+    }
+  };
+
   const callDoubaoVisionApi = async (base64Image: string) => {
     try {
       const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
@@ -202,14 +242,69 @@ export const MainLayout = () => {
     }
   };
 
+  const callOpenRouterVisionApi = async (base64Image: string) => {
+    if (!openRouterApiKey) {
+        throw new Error('OpenRouter API Key is not set.');
+    }
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openRouterApiKey}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'ArchiFlow',
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `请分析这张架构图，并以JSON格式返回其节点和连接。JSON应该包含一个'nodes'数组和一个'connections'数组。
+                  每个节点应有 'id', 'label', 'x', 'y'。
+                  每个连接应有 'from'和 'to'，使用节点的id。
+                  节点的x, y坐标应大致反映其在图像中的相对位置。`
+                },
+                {
+                  type: 'image_url',
+                  image_url: { url: base64Image }
+                }
+              ]
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('OpenRouter Vision API call failed:', error);
+      throw error;
+    }
+  };
+
   const handleGenerate = async () => {
     if (!inputText.trim() || !archGenerator || !activeTheme) return;
     
     setIsGenerating(true);
     
     try {
-      const aiResponse = await callDoubaoApi(inputText);
-      console.log('豆包API响应:', aiResponse);
+      let aiResponse;
+      if (modelProvider === 'openrouter') {
+        aiResponse = await callOpenRouterApi(inputText);
+      } else {
+        aiResponse = await callDoubaoApi(inputText);
+      }
+      console.log(`${modelProvider} API响应:`, aiResponse);
       
       try {
         const architectureData = JSON.parse(aiResponse);
@@ -258,8 +353,14 @@ export const MainLayout = () => {
         const base64Image = e.target?.result as string;
         if (!base64Image || !archGenerator || !activeTheme) return;
 
-        const aiResponse = await callDoubaoVisionApi(base64Image);
-        console.log('豆包Vision API响应:', aiResponse);
+        let aiResponse;
+        if (modelProvider === 'openrouter') {
+          aiResponse = await callOpenRouterVisionApi(base64Image);
+        } else {
+          aiResponse = await callDoubaoVisionApi(base64Image);
+        }
+        
+        console.log(`${modelProvider} Vision API响应:`, aiResponse);
         
         const cleanedJsonResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
         const architectureData = JSON.parse(cleanedJsonResponse);
@@ -451,6 +552,12 @@ export const MainLayout = () => {
         <LeftSidebar
           apiKey={apiKey}
           onApiKeyChange={setApiKey}
+          modelProvider={modelProvider}
+          setModelProvider={setModelProvider}
+          openRouterApiKey={openRouterApiKey}
+          onOpenRouterApiKeyChange={setOpenRouterApiKey}
+          selectedModel={selectedModel}
+          setSelectedModel={setSelectedModel}
           inputMode={inputMode}
           setInputMode={setInputMode}
           inputText={inputText}

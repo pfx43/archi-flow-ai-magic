@@ -4,15 +4,21 @@ import { Wand2, FileText, Upload, Brain, Network, Square, Circle as CircleIcon, 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { DoubaoApiConfig } from '@/components/DoubaoApiConfig';
 import { ImageUploadHandler } from '@/components/ImageUploadHandler';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
 import { Theme } from '@/lib/themes';
+import { ModelProviderConfig } from './ModelProviderConfig';
 
 interface LeftSidebarProps {
   apiKey: string;
   onApiKeyChange: (key: string) => void;
+  modelProvider: 'doubao' | 'openrouter';
+  setModelProvider: (provider: 'doubao' | 'openrouter') => void;
+  openRouterApiKey: string;
+  onOpenRouterApiKeyChange: (key: string) => void;
+  selectedModel: string;
+  setSelectedModel: (model: string) => void;
   inputMode: 'simple' | 'long' | 'image';
   setInputMode: (mode: 'simple' | 'long' | 'image') => void;
   inputText: string;
@@ -31,6 +37,12 @@ interface LeftSidebarProps {
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   apiKey,
   onApiKeyChange,
+  modelProvider,
+  setModelProvider,
+  openRouterApiKey,
+  onOpenRouterApiKeyChange,
+  selectedModel,
+  setSelectedModel,
   inputMode,
   setInputMode,
   inputText,
@@ -59,7 +71,16 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       </div>
 
       {/* API Configuration */}
-      <DoubaoApiConfig apiKey={apiKey} onApiKeyChange={onApiKeyChange} />
+      <ModelProviderConfig
+        modelProvider={modelProvider}
+        setModelProvider={setModelProvider}
+        doubaoApiKey={apiKey}
+        onDoubaoApiKeyChange={onApiKeyChange}
+        openRouterApiKey={openRouterApiKey}
+        onOpenRouterApiKeyChange={onOpenRouterApiKeyChange}
+        selectedModel={selectedModel}
+        setSelectedModel={setSelectedModel}
+      />
 
       {/* Input Section */}
       <Card className="p-4">
