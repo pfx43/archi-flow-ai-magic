@@ -40,50 +40,47 @@ export const MainLayout = () => {
 
     // Enhanced panning logic with middle mouse button support
     let isPanning = false;
-    let lastPosX = 0;
-    let lastPosY = 0;
+    let lastPosX: number;
+    let lastPosY: number;
 
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
-        // Middle mouse button (button === 1) or Alt+click for panning
-        if (evt instanceof MouseEvent && (evt.button === 1 || evt.altKey)) {
-            evt.preventDefault(); // Prevent default middle click behavior
+        // Check for middle mouse button press
+        if (evt.button === 1) {
             isPanning = true;
-            this.selection = false; // Disable selection during pan
+            this.selection = false;
+            this.setCursor('grabbing');
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
-            this.defaultCursor = 'grabbing';
-            this.requestRenderAll();
+            evt.preventDefault();
         }
     });
 
     canvas.on('mouse:move', function(opt) {
         if (isPanning) {
             const e = opt.e;
-            if (e instanceof MouseEvent) {
-                const vpt = this.viewportTransform;
-                if (vpt) {
-                    vpt[4] += e.clientX - lastPosX;
-                    vpt[5] += e.clientY - lastPosY;
-                    this.requestRenderAll();
-                }
-                lastPosX = e.clientX;
-                lastPosY = e.clientY;
+            const vpt = this.viewportTransform;
+            if (vpt) {
+                vpt[4] += e.clientX - lastPosX;
+                vpt[5] += e.clientY - lastPosY;
+                this.requestRenderAll();
             }
+            lastPosX = e.clientX;
+            lastPosY = e.clientY;
         }
     });
 
     canvas.on('mouse:up', function(opt) {
         if (isPanning) {
+            isPanning = false;
+            this.selection = true;
+            this.setCursor('default');
+            this.requestRenderAll();
+            
             const evt = opt.e;
-            if (evt instanceof MouseEvent && evt.button === 1) {
+            if (evt.button === 1) {
                 evt.preventDefault();
             }
-            this.setViewportTransform(this.viewportTransform || [1, 0, 0, 1, 0, 0]);
-            isPanning = false;
-            this.selection = true; // Re-enable selection
-            this.defaultCursor = 'default';
-            this.requestRenderAll();
         }
     });
 
