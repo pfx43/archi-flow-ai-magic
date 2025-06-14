@@ -18,7 +18,6 @@ export const MainLayout = () => {
   const [inputMode, setInputMode] = useState<'simple' | 'long' | 'image'>('simple');
   const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text'>('select');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showProperties, setShowProperties] = useState(false);
   const [apiKey, setApiKey] = useState('66517a68-24bb-4f60-94dc-1fe4c3b89e26');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
@@ -428,7 +427,7 @@ export const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
         {/* Center Canvas - positioned at the bottom layer */}
         <div className="absolute inset-0 z-0">
             <canvas
@@ -596,7 +595,7 @@ export const MainLayout = () => {
         </div>
 
         {/* Top Bar - floating */}
-        <div className={`absolute top-0 h-16 bg-white/30 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: showProperties ? '20rem' : '0' }}>
+        <div className={`absolute top-0 h-16 bg-white/30 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: '0' }}>
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-800">架构图设计</h2>
               <Badge variant="outline" className="text-xs">实时编辑</Badge>
@@ -611,13 +610,6 @@ export const MainLayout = () => {
               </Button>
               <Button variant="outline" size="sm">
                 导出SVG
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowProperties(!showProperties)}
-              >
-                <Settings className="w-4 h-4" />
               </Button>
             </div>
         </div>
