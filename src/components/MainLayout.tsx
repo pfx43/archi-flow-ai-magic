@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
@@ -46,7 +47,7 @@ export const MainLayout = () => {
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
         // Check for middle mouse button press
-        if (evt.button === 1) {
+        if (evt instanceof MouseEvent && evt.button === 1) {
             isPanning = true;
             this.selection = false;
             this.setCursor('grabbing');
@@ -59,6 +60,7 @@ export const MainLayout = () => {
     canvas.on('mouse:move', function(opt) {
         if (isPanning) {
             const e = opt.e;
+            if (!(e instanceof MouseEvent)) return;
             const vpt = this.viewportTransform;
             if (vpt) {
                 vpt[4] += e.clientX - lastPosX;
@@ -78,7 +80,7 @@ export const MainLayout = () => {
             this.requestRenderAll();
             
             const evt = opt.e;
-            if (evt.button === 1) {
+            if (evt instanceof MouseEvent && evt.button === 1) {
                 evt.preventDefault();
             }
         }
