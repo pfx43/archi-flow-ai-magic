@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings, Brain, Network } from 'lucide-react';
@@ -22,7 +23,6 @@ export const MainLayout = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme | null>(themes[0]);
-  const [showProperties, setShowProperties] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -428,7 +428,7 @@ export const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-white relative overflow-hidden">
         {/* Center Canvas - positioned at the bottom layer */}
         <div className="absolute inset-0 z-0">
             <canvas
@@ -438,7 +438,7 @@ export const MainLayout = () => {
         </div>
 
         {/* Left Sidebar - floating on top */}
-        <div className="absolute top-0 left-0 h-full w-80 bg-white/30 backdrop-blur-xl border-r border-white/20 p-6 flex flex-col gap-6 z-20 overflow-y-auto">
+        <div className="absolute top-0 left-0 h-full w-80 bg-white border-r border-gray-200 p-6 flex flex-col gap-6 z-20 overflow-y-auto hide-scrollbar">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-xl flex items-center justify-center">
@@ -454,7 +454,7 @@ export const MainLayout = () => {
           <DoubaoApiConfig apiKey={apiKey} onApiKeyChange={setApiKey} />
 
           {/* Input Section */}
-          <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
+          <Card className="p-4">
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Button
@@ -482,7 +482,7 @@ export const MainLayout = () => {
                   placeholder={inputMode === 'simple' ? "描述您想要的架构图..." : "粘贴论文或技术文档内容..."}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  className="min-h-[100px] bg-white/70 border-white/30 focus:bg-white/90 transition-all duration-300"
+                  className="min-h-[100px] transition-all duration-300"
                 />
               </div>
 
@@ -521,7 +521,7 @@ export const MainLayout = () => {
           </Card>
 
           {/* Quick Architecture Templates */}
-          <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
+          <Card className="p-4">
             <h3 className="text-sm font-medium text-gray-700 mb-3">快速生成</h3>
             <div className="space-y-2">
               <Button
@@ -546,7 +546,7 @@ export const MainLayout = () => {
           </Card>
 
           {/* Tools */}
-          <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
+          <Card className="p-4">
             <h3 className="text-sm font-medium text-gray-700 mb-3">编辑工具</h3>
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -596,7 +596,7 @@ export const MainLayout = () => {
         </div>
 
         {/* Top Bar - floating */}
-        <div className={`absolute top-0 h-16 bg-white/30 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: '0' }}>
+        <div className={`absolute top-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: '0' }}>
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-800">架构图设计</h2>
               <Badge variant="outline" className="text-xs">实时编辑</Badge>

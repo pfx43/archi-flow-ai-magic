@@ -21,7 +21,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ activeTheme, onThe
   }, {} as Record<string, Theme[]>);
 
   return (
-    <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
+    <Card className="p-4">
       <h3 className="text-sm font-medium text-gray-700 mb-3">主题配色</h3>
       <div className="space-y-4">
         {Object.entries(groupedThemes).map(([category, themeList]) => (
@@ -34,8 +34,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ activeTheme, onThe
                   onClick={() => onThemeSelect(theme)}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-200 ${
                     activeTheme?.name === theme.name
-                      ? 'bg-white/70 shadow-md ring-2 ring-indigo-500/20'
-                      : 'hover:bg-white/50'
+                      ? 'bg-indigo-50 ring-2 ring-indigo-500'
+                      : 'hover:bg-gray-100'
                   }`}
                 >
                   <div className="flex-shrink-0 flex items-center gap-1">
