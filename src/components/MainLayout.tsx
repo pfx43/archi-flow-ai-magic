@@ -11,13 +11,6 @@ import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
 import { Theme, themes } from '@/lib/themes';
 import { ThemeSelector } from '@/components/ThemeSelector';
 
-interface Template {
-  id: string;
-  name: string;
-  style: string;
-  preview: string;
-}
-
 export const MainLayout = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
@@ -30,12 +23,6 @@ export const MainLayout = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme | null>(themes[0]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const templates: Template[] = [
-    { id: 'template1', name: '科技蓝', style: 'bg-blue-500', preview: 'AI' },
-    { id: 'template2', name: '活力橙', style: 'bg-orange-500', preview: 'ML' },
-    { id: 'template3', name: '清新绿', style: 'bg-green-500', preview: 'DL' },
-  ];
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -120,12 +107,8 @@ export const MainLayout = () => {
   }, [isFullscreen, activeTheme]);
 
   const addDotGridBackground = (canvas: FabricCanvas, color = '#E5E7EB') => {
-    canvas.getObjects('rect').forEach(obj => {
-        if(obj.get('type') === 'grid-dot') canvas.remove(obj)
-    });
-    canvas.getObjects('circle').forEach(obj => {
-        if(obj.get('type') === 'grid-dot') canvas.remove(obj)
-    });
+    const gridDots = canvas.getObjects().filter(obj => obj.get('isGridDot'));
+    gridDots.forEach(dot => canvas.remove(dot));
 
     const spacing = 20;
     const canvasWidth = canvas.width || window.innerWidth;
@@ -142,7 +125,7 @@ export const MainLayout = () => {
           selectable: false,
           evented: false,
           // @ts-ignore
-          type: 'grid-dot'
+          isGridDot: true
         });
         gridGroup.push(dot)
       }
@@ -190,7 +173,7 @@ export const MainLayout = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+8          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'doubao-pro-32k',
