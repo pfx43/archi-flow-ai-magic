@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
@@ -41,12 +42,14 @@ export const MainLayout = () => {
 
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
-        if (evt instanceof MouseEvent && evt.button === 1) { // Middle mouse button
+        // Middle mouse button or Alt+click for panning
+        if ((evt instanceof MouseEvent && evt.button === 1) || evt.altKey) {
             isPanning = true;
+            this.selection = false; // Disable selection during pan
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
-            canvas.defaultCursor = 'grabbing';
-            canvas.requestRenderAll();
+            this.defaultCursor = 'grabbing';
+            this.requestRenderAll();
         }
     });
 
@@ -70,8 +73,9 @@ export const MainLayout = () => {
         if (isPanning) {
             this.setViewportTransform(this.viewportTransform || [1, 0, 0, 1, 0, 0]);
             isPanning = false;
-            canvas.defaultCursor = 'default';
-            canvas.requestRenderAll();
+            this.selection = true; // Re-enable selection
+            this.defaultCursor = 'default';
+            this.requestRenderAll();
         }
     });
 
