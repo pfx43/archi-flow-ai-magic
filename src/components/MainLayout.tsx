@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow } from 'fabric';
 import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings } from 'lucide-react';
@@ -163,12 +162,10 @@ export const MainLayout = () => {
             // Animate in with updated Fabric.js v6 syntax
             node.animate('opacity', 1, {
               duration: 500,
-              easing: function(t: number) { return t * t * (3 - 2 * t); },
               onChange: () => fabricCanvas.renderAll()
             });
             text.animate('opacity', 1, {
               duration: 500,
-              easing: function(t: number) { return t * t * (3 - 2 * t); },
               onChange: () => fabricCanvas.renderAll()
             });
           }, index * 200);
