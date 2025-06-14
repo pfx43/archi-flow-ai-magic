@@ -213,7 +213,7 @@ export const MainLayout = () => {
   };
 
   const handleGenerate = async () => {
-    if (!inputText.trim() || !archGenerator) return;
+    if (!inputText.trim() || !archGenerator || !activeTheme) return;
     
     setIsGenerating(true);
     
@@ -232,10 +232,9 @@ export const MainLayout = () => {
                 y: n.y || Math.random() * 600,
                 width: 120,
                 height: 60,
-                color: '#3B82F6'
             }));
             const connections = architectureData.connections;
-            archGenerator.generateFromData(nodes, connections);
+            archGenerator.generateFromData(nodes, connections, activeTheme.palette);
             setIsGenerating(false);
             return;
         }
@@ -245,14 +244,14 @@ export const MainLayout = () => {
 
       // Fallback to keyword matching
       if (aiResponse.includes('multimodal') || aiResponse.includes('多模态') || aiResponse.includes('encoder')) {
-        archGenerator.generateMultiModalArchitecture();
+        archGenerator.generateMultiModalArchitecture(activeTheme.palette);
       } else {
-        archGenerator.generateSpectralDomainArchitecture();
+        archGenerator.generateSpectralDomainArchitecture(activeTheme.palette);
       }
     } catch (error) {
       console.error('生成失败:', error);
-      if (archGenerator) {
-        archGenerator.generateMultiModalArchitecture();
+      if (archGenerator && activeTheme) {
+        archGenerator.generateMultiModalArchitecture(activeTheme.palette);
       }
     } finally {
       setIsGenerating(false);
@@ -267,7 +266,7 @@ export const MainLayout = () => {
     reader.onload = async (e) => {
       try {
         const base64Image = e.target?.result as string;
-        if (!base64Image || !archGenerator) return;
+        if (!base64Image || !archGenerator || !activeTheme) return;
 
         const aiResponse = await callDoubaoVisionApi(base64Image);
         console.log('豆包Vision API响应:', aiResponse);
@@ -284,18 +283,17 @@ export const MainLayout = () => {
                 y: n.y || Math.random() * 600,
                 width: 120,
                 height: 60,
-                color: '#3B82F6'
             }));
             const connections = architectureData.connections;
-            archGenerator.generateFromData(nodes, connections);
+            archGenerator.generateFromData(nodes, connections, activeTheme.palette);
         } else {
             throw new Error("从AI响应中解析JSON失败或格式不正确");
         }
       } catch (error) {
         console.error('图片分析生成失败:', error);
         // Fallback to a default architecture on error
-        if (archGenerator) {
-          archGenerator.generateMultiModalArchitecture();
+        if (archGenerator && activeTheme) {
+          archGenerator.generateMultiModalArchitecture(activeTheme.palette);
         }
       } finally {
         setIsGenerating(false);
@@ -369,21 +367,29 @@ export const MainLayout = () => {
     addDotGridBackground(fabricCanvas, palette.grid);
 
     fabricCanvas.getObjects().forEach(obj => {
-        const nodeId = obj.get('nodeId');
-        if (nodeId) { // Is a node part
-            if (obj instanceof Rect) { // Node body
-                obj.set({
+        // Skip grid dots
+        if (obj.get('isGridDot')) return;
+        
+        // Handle node bodies (Rect, Circle)
+        if (obj instanceof Rect || obj instanceof Circle) {
+            // Special case for arrows
+            if (obj.get('isArrowHead')) {
+                obj.set('fill', palette.arrow);
+                obj.set('stroke', 'transparent');
+            } else {
+                 obj.set({
                     fill: palette.nodeFill,
                     stroke: palette.nodeStroke
-                });
-            } else if (obj instanceof FabricText) { // Node text
-                obj.set('fill', palette.nodeText);
+                 });
             }
-        } else if (obj instanceof Line) { // Connection
+        } 
+        // Handle text
+        else if (obj instanceof FabricText) {
+            obj.set('fill', palette.nodeText);
+        } 
+        // Handle connection lines
+        else if (obj instanceof Line) {
             obj.set('stroke', palette.connection);
-        } else if (obj.get('isArrowHead')) { // Arrow
-            obj.set('fill', palette.arrow);
-            obj.set('stroke', 'transparent'); 
         }
     });
 
@@ -402,11 +408,11 @@ export const MainLayout = () => {
           <Button onClick={toggleFullscreen} variant="outline" size="sm">
             退出全屏
           </Button>
-          <Button onClick={() => archGenerator?.generateMultiModalArchitecture()} variant="outline" size="sm">
+          <Button onClick={() => archGenerator && activeTheme && archGenerator.generateMultiModalArchitecture(activeTheme.palette)} variant="outline" size="sm">
             <Brain className="w-4 h-4 mr-2" />
             多模态架构
           </Button>
-          <Button onClick={() => archGenerator?.generateSpectralDomainArchitecture()} variant="outline" size="sm">
+          <Button onClick={() => archGenerator && activeTheme && archGenerator.generateSpectralDomainArchitecture(activeTheme.palette)} variant="outline" size="sm">
             <Network className="w-4 h-4 mr-2" />
             频谱域架构
           </Button>
@@ -521,7 +527,7 @@ export const MainLayout = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => archGenerator?.generateMultiModalArchitecture()}
+                onClick={() => archGenerator && activeTheme && archGenerator.generateMultiModalArchitecture(activeTheme.palette)}
                 className="w-full justify-start"
               >
                 <Brain className="w-4 h-4 mr-2" />
@@ -530,7 +536,7 @@ export const MainLayout = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => archGenerator?.generateSpectralDomainArchitecture()}
+                onClick={() => archGenerator && activeTheme && archGenerator.generateSpectralDomainArchitecture(activeTheme.palette)}
                 className="w-full justify-start"
               >
                 <Network className="w-4 h-4 mr-2" />
