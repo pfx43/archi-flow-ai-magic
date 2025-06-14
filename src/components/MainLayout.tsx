@@ -383,6 +383,42 @@ export const MainLayout = () => {
     setIsFullscreen(!isFullscreen);
   };
 
+  const handleExport = (format: 'png' | 'svg') => {
+    if (!fabricCanvas) return;
+
+    // Temporarily set background to white for export if needed
+    const originalBg = fabricCanvas.backgroundColor;
+    fabricCanvas.setBackgroundColor('#FFFFFF', fabricCanvas.renderAll.bind(fabricCanvas));
+
+    const download = (url: string, filename: string) => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      if (format === 'svg') {
+        URL.revokeObjectURL(url);
+      }
+    };
+
+    if (format === 'png') {
+      const dataUrl = fabricCanvas.toDataURL({
+        format: 'png',
+        quality: 1,
+      });
+      download(dataUrl, 'architecture.png');
+    } else { // svg
+      const svg = fabricCanvas.toSVG();
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      download(url, 'architecture.svg');
+    }
+
+    // Restore original background color
+    fabricCanvas.setBackgroundColor(originalBg || '#FFFFFF', fabricCanvas.renderAll.bind(fabricCanvas));
+  };
+
   if (isFullscreen) {
     return (
       <FullscreenView
@@ -424,7 +460,11 @@ export const MainLayout = () => {
         />
 
         {/* Top Bar */}
-        <TopBar toggleFullscreen={toggleFullscreen} />
+        <TopBar 
+          toggleFullscreen={toggleFullscreen}
+          onExportPNG={() => handleExport('png')}
+          onExportSVG={() => handleExport('svg')}
+        />
     </div>
   );
 };

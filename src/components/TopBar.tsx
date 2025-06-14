@@ -6,9 +6,11 @@ import { Image } from 'lucide-react';
 
 interface TopBarProps {
   toggleFullscreen: () => void;
+  onExportPNG: () => void;
+  onExportSVG: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ toggleFullscreen }) => {
+export const TopBar: React.FC<TopBarProps> = ({ toggleFullscreen, onExportPNG, onExportSVG }) => {
   return (
     <div className={`absolute top-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: '0' }}>
       <div className="flex items-center gap-4">
@@ -19,11 +21,11 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleFullscreen }) => {
         <Button variant="outline" size="sm" onClick={toggleFullscreen}>
           全屏模式
         </Button>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={onExportPNG}>
           <Image className="w-4 h-4 mr-2" />
           导出PNG
         </Button>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={onExportSVG}>
           导出SVG
         </Button>
       </div>
