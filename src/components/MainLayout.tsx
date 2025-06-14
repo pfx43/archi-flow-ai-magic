@@ -1,15 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
-import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings, Brain, Network } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { DoubaoApiConfig } from '@/components/DoubaoApiConfig';
-import { ImageUploadHandler } from '@/components/ImageUploadHandler';
 import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
 import { Theme, themes } from '@/lib/themes';
-import { ThemeSelector } from '@/components/ThemeSelector';
+import { LeftSidebar } from './LeftSidebar';
+import { TopBar } from './TopBar';
+import { FullscreenView } from './FullscreenView';
 
 export const MainLayout = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -293,7 +288,7 @@ export const MainLayout = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleToolClick = (tool: typeof activeTool) => {
+  const handleToolClick = (tool: 'rectangle' | 'circle' | 'text') => {
     setActiveTool(tool);
     if (!fabricCanvas || !activeTheme) return;
 
@@ -390,28 +385,12 @@ export const MainLayout = () => {
 
   if (isFullscreen) {
     return (
-      <div className="min-h-screen bg-white relative">
-        {/* Floating controls */}
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
-          <Button onClick={toggleFullscreen} variant="outline" size="sm">
-            退出全屏
-          </Button>
-          <Button onClick={() => archGenerator && activeTheme && archGenerator.generateMultiModalArchitecture(activeTheme.palette)} variant="outline" size="sm">
-            <Brain className="w-4 h-4 mr-2" />
-            多模态架构
-          </Button>
-          <Button onClick={() => archGenerator && activeTheme && archGenerator.generateSpectralDomainArchitecture(activeTheme.palette)} variant="outline" size="sm">
-            <Network className="w-4 h-4 mr-2" />
-            频谱域架构
-          </Button>
-        </div>
-
-        {/* Full screen canvas */}
-        <canvas
-          ref={canvasRef}
-          className="block w-full h-full"
-        />
-      </div>
+      <FullscreenView
+        canvasRef={canvasRef}
+        toggleFullscreen={toggleFullscreen}
+        archGenerator={archGenerator}
+        activeTheme={activeTheme}
+      />
     );
   }
 
@@ -425,183 +404,27 @@ export const MainLayout = () => {
             />
         </div>
 
-        {/* Left Sidebar - floating on top */}
-        <div className="absolute top-0 left-0 h-full w-80 bg-white border-r border-gray-200 p-6 flex flex-col gap-6 z-20 overflow-y-auto hide-scrollbar">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-xl flex items-center justify-center">
-              <Wand2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">ArchiFlow</h1>
-              <p className="text-xs text-gray-500">AI架构图生成器</p>
-            </div>
-          </div>
+        {/* Left Sidebar */}
+        <LeftSidebar
+          apiKey={apiKey}
+          onApiKeyChange={setApiKey}
+          inputMode={inputMode}
+          setInputMode={setInputMode}
+          inputText={inputText}
+          setInputText={setInputText}
+          handleImageUpload={handleImageUpload}
+          handleGenerate={handleGenerate}
+          isGenerating={isGenerating}
+          archGenerator={archGenerator}
+          activeTheme={activeTheme}
+          handleThemeSelect={handleThemeSelect}
+          activeTool={activeTool}
+          setActiveTool={setActiveTool}
+          handleToolClick={handleToolClick}
+        />
 
-          {/* API Configuration */}
-          <DoubaoApiConfig apiKey={apiKey} onApiKeyChange={setApiKey} />
-
-          {/* Input Section */}
-          <Card className="p-4">
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={inputMode === 'simple' ? 'default' : 'outline'}
-                  onClick={() => setInputMode('simple')}
-                  className="flex-1"
-                >
-                  <Type className="w-4 h-4 mr-1" />
-                  简单描述
-                </Button>
-                <Button
-                  size="sm"
-                  variant={inputMode === 'long' ? 'default' : 'outline'}
-                  onClick={() => setInputMode('long')}
-                  className="flex-1"
-                >
-                  <FileText className="w-4 h-4 mr-1" />
-                  论文文本
-                </Button>
-              </div>
-              
-              <div className="relative">
-                <Textarea
-                  placeholder={inputMode === 'simple' ? "描述您想要的架构图..." : "粘贴论文或技术文档内容..."}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  className="min-h-[100px] transition-all duration-300"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <ImageUploadHandler
-                  onImageUpload={handleImageUpload}
-                />
-                <label htmlFor="file-upload" className="flex-1">
-                  <Button variant="outline" className="w-full" asChild>
-                    <span>
-                      <Upload className="w-4 h-4 mr-2" />
-                      上传图片
-                    </span>
-                  </Button>
-                </label>
-              </div>
-
-              <Button 
-                onClick={handleGenerate}
-                disabled={isGenerating || !inputText.trim()}
-                className="w-full bg-gradient-to-r from-indigo-500 to-cyan-400 hover:from-indigo-600 hover:to-cyan-500 text-white font-medium py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {isGenerating ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                    豆包AI生成中...
-                  </div>
-                ) : (
-                  <>
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    智能生成
-                  </>
-                )}
-              </Button>
-            </div>
-          </Card>
-
-          {/* Quick Architecture Templates */}
-          <Card className="p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">快速生成</h3>
-            <div className="space-y-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => archGenerator && activeTheme && archGenerator.generateMultiModalArchitecture(activeTheme.palette)}
-                className="w-full justify-start"
-              >
-                <Brain className="w-4 h-4 mr-2" />
-                多模态架构
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => archGenerator && activeTheme && archGenerator.generateSpectralDomainArchitecture(activeTheme.palette)}
-                className="w-full justify-start"
-              >
-                <Network className="w-4 h-4 mr-2" />
-                频谱域架构
-              </Button>
-            </div>
-          </Card>
-
-          {/* Tools */}
-          <Card className="p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">编辑工具</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                size="sm"
-                variant={activeTool === 'select' ? 'default' : 'outline'}
-                onClick={() => setActiveTool('select')}
-                className="justify-start"
-              >
-                <Move className="w-4 h-4 mr-2" />
-                选择
-              </Button>
-              <Button
-                size="sm"
-                variant={activeTool === 'rectangle' ? 'default' : 'outline'}
-                onClick={() => handleToolClick('rectangle')}
-                className="justify-start"
-              >
-                <Square className="w-4 h-4 mr-2" />
-                矩形
-              </Button>
-              <Button
-                size="sm"
-                variant={activeTool === 'circle' ? 'default' : 'outline'}
-                onClick={() => handleToolClick('circle')}
-                className="justify-start"
-              >
-                <CircleIcon className="w-4 h-4 mr-2" />
-                圆形
-              </Button>
-              <Button
-                size="sm"
-                variant={activeTool === 'text' ? 'default' : 'outline'}
-                onClick={() => handleToolClick('text')}
-                className="justify-start"
-              >
-                <Type className="w-4 h-4 mr-2" />
-                文本
-              </Button>
-            </div>
-          </Card>
-
-          {/* Themes */}
-          <ThemeSelector activeTheme={activeTheme} onThemeSelect={handleThemeSelect} />
-
-          {/* Templates */}
-          
-        </div>
-
-        {/* Top Bar - floating */}
-        <div className={`absolute top-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: '0' }}>
-            <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold text-gray-800">架构图设计</h2>
-              <Badge variant="outline" className="text-xs">实时编辑</Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-                全屏模式
-              </Button>
-              <Button variant="outline" size="sm">
-                <Image className="w-4 h-4 mr-2" />
-                导出PNG
-              </Button>
-              <Button variant="outline" size="sm">
-                导出SVG
-              </Button>
-            </div>
-        </div>
+        {/* Top Bar */}
+        <TopBar toggleFullscreen={toggleFullscreen} />
     </div>
   );
 };
