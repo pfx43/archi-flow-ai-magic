@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow } from 'fabric';
+import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings, Brain, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { DoubaoApiConfig } from '@/components/DoubaoApiConfig';
 import { ImageUploadHandler } from '@/components/ImageUploadHandler';
 import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
+import { Theme, themes } from '@/lib/themes';
+import { ThemeSelector } from '@/components/ThemeSelector';
 
 interface Template {
   id: string;
@@ -21,20 +23,13 @@ export const MainLayout = () => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [inputText, setInputText] = useState('');
   const [inputMode, setInputMode] = useState<'simple' | 'long' | 'image'>('simple');
-  const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text'>('select');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showProperties, setShowProperties] = useState(false);
   const [apiKey, setApiKey] = useState('66517a68-24bb-4f60-94dc-1fe4c3b89e26');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
-
-  const templates: Template[] = [
-    { id: 'modern', name: '现代风格', style: 'bg-gradient-to-br from-blue-500 to-cyan-400', preview: 'M' },
-    { id: 'academic', name: '学术风格', style: 'bg-gradient-to-br from-gray-600 to-gray-800', preview: 'A' },
-    { id: 'aws', name: 'AWS风格', style: 'bg-gradient-to-br from-orange-500 to-yellow-400', preview: 'W' },
-    { id: 'minimal', name: '简约风格', style: 'bg-gradient-to-br from-indigo-500 to-purple-600', preview: 'S' }
-  ];
+  const [activeTheme, setActiveTheme] = useState<Theme | null>(themes[0]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -42,7 +37,7 @@ export const MainLayout = () => {
     const canvas = new FabricCanvas(canvasRef.current, {
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: activeTheme?.palette.background || '#FFFFFF',
     });
 
     setFabricCanvas(canvas);
@@ -50,7 +45,11 @@ export const MainLayout = () => {
     const generator = new ArchitectureGenerator(canvas);
     setArchGenerator(generator);
     
-    addDotGridBackground(canvas);
+    if (activeTheme) {
+      addDotGridBackground(canvas, activeTheme.palette.grid);
+    } else {
+      addDotGridBackground(canvas);
+    }
 
     // Panning logic
     let isPanning = false;
@@ -59,7 +58,7 @@ export const MainLayout = () => {
 
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
-        if (evt.button === 1) { // Middle mouse button
+        if (evt instanceof MouseEvent && evt.button === 1) { // Middle mouse button
             isPanning = true;
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
@@ -71,14 +70,16 @@ export const MainLayout = () => {
     canvas.on('mouse:move', function(opt) {
         if (isPanning) {
             const e = opt.e;
-            const vpt = this.viewportTransform;
-            if (vpt) {
-                vpt[4] += e.clientX - lastPosX;
-                vpt[5] += e.clientY - lastPosY;
-                this.requestRenderAll();
+            if (e instanceof MouseEvent) {
+                const vpt = this.viewportTransform;
+                if (vpt) {
+                    vpt[4] += e.clientX - lastPosX;
+                    vpt[5] += e.clientY - lastPosY;
+                    this.requestRenderAll();
+                }
+                lastPosX = e.clientX;
+                lastPosY = e.clientY;
             }
-            lastPosX = e.clientX;
-            lastPosY = e.clientY;
         }
     });
 
@@ -96,7 +97,11 @@ export const MainLayout = () => {
         width: window.innerWidth,
         height: window.innerHeight,
       });
-      addDotGridBackground(canvas);
+      if (activeTheme) {
+        addDotGridBackground(canvas, activeTheme.palette.grid);
+      } else {
+        addDotGridBackground(canvas);
+      }
       canvas.renderAll();
     };
 
@@ -106,9 +111,9 @@ export const MainLayout = () => {
       window.removeEventListener('resize', handleResize);
       canvas.dispose();
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, activeTheme]);
 
-  const addDotGridBackground = (canvas: FabricCanvas) => {
+  const addDotGridBackground = (canvas: FabricCanvas, color = '#E5E7EB') => {
     canvas.getObjects('rect').forEach(obj => {
         if(obj.get('type') === 'grid-dot') canvas.remove(obj)
     });
@@ -127,7 +132,7 @@ export const MainLayout = () => {
           left: x,
           top: y,
           radius: 1,
-          fill: '#E5E7EB',
+          fill: color,
           selectable: false,
           evented: false,
           // @ts-ignore
@@ -312,7 +317,7 @@ export const MainLayout = () => {
 
   const handleToolClick = (tool: typeof activeTool) => {
     setActiveTool(tool);
-    if (!fabricCanvas) return;
+    if (!fabricCanvas || !activeTheme) return;
 
     // Create shadow for new elements
     const elementShadow = new Shadow({
@@ -323,12 +328,14 @@ export const MainLayout = () => {
       affectStroke: false
     });
 
+    const palette = activeTheme.palette;
+
     if (tool === 'rectangle') {
       const rect = new Rect({
         left: 200,
         top: 200,
-        fill: '#FFFFFF',
-        stroke: '#4F46E5',
+        fill: palette.nodeFill,
+        stroke: palette.nodeStroke,
         strokeWidth: 2,
         width: 100,
         height: 60,
@@ -342,15 +349,56 @@ export const MainLayout = () => {
       const circle = new Circle({
         left: 200,
         top: 200,
-        fill: '#FFFFFF',
-        stroke: '#22D3EE',
+        fill: palette.nodeFill,
+        stroke: palette.nodeStroke,
         strokeWidth: 2,
         radius: 40,
         shadow: elementShadow
       });
       fabricCanvas.add(circle);
       fabricCanvas.renderAll();
+    } else if (tool === 'text') {
+        const text = new FabricText('新文本', {
+            left: 200,
+            top: 200,
+            fontFamily: 'system-ui',
+            fontSize: 20,
+            fill: palette.nodeText,
+            shadow: elementShadow,
+        });
+        fabricCanvas.add(text);
+        fabricCanvas.renderAll();
     }
+  };
+
+  const handleThemeSelect = (theme: Theme) => {
+    setActiveTheme(theme);
+    if (!fabricCanvas) return;
+    const palette = theme.palette;
+
+    fabricCanvas.backgroundColor = palette.background;
+    addDotGridBackground(fabricCanvas, palette.grid);
+
+    fabricCanvas.getObjects().forEach(obj => {
+        const nodeId = obj.get('nodeId');
+        if (nodeId) { // Is a node part
+            if (obj instanceof Rect) { // Node body
+                obj.set({
+                    fill: palette.nodeFill,
+                    stroke: palette.nodeStroke
+                });
+            } else if (obj instanceof FabricText) { // Node text
+                obj.set('fill', palette.nodeText);
+            }
+        } else if (obj instanceof Line) { // Connection
+            obj.set('stroke', palette.connection);
+        } else if (obj.get('isArrowHead')) { // Arrow
+            obj.set('fill', palette.arrow);
+            obj.set('stroke', 'transparent'); 
+        }
+    });
+
+    fabricCanvas.renderAll();
   };
 
   const toggleFullscreen = () => {
@@ -536,7 +584,7 @@ export const MainLayout = () => {
               <Button
                 size="sm"
                 variant={activeTool === 'text' ? 'default' : 'outline'}
-                onClick={() => setActiveTool('text')}
+                onClick={() => handleToolClick('text')}
                 className="justify-start"
               >
                 <Type className="w-4 h-4 mr-2" />
@@ -544,6 +592,9 @@ export const MainLayout = () => {
               </Button>
             </div>
           </Card>
+
+          {/* Themes */}
+          <ThemeSelector activeTheme={activeTheme} onThemeSelect={handleThemeSelect} />
 
           {/* Templates */}
           <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30 flex-1">

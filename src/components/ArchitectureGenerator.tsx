@@ -209,6 +209,7 @@ export class ArchitectureGenerator {
         selectable: false,
         evented: false,
       });
+      arrowHead.set('isArrowHead', true);
 
       this.canvas.add(line, arrowHead);
       this.canvas.sendObjectToBack(line);
