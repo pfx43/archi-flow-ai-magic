@@ -32,8 +32,8 @@ interface LeftSidebarProps {
   activeTheme: Theme | null;
   handleThemeSelect: (theme: Theme) => void;
   activeTool: string;
-  setActiveTool: (tool: 'select' | 'rectangle' | 'circle' | 'text') => void;
-  handleToolClick: (tool: 'rectangle' | 'circle' | 'text') => void;
+  setActiveTool: (tool: 'select' | 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle') => void;
+  handleToolClick: (tool: 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle') => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
