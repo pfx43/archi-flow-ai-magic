@@ -1,4 +1,3 @@
-
 export interface Theme {
   name: string;
   category: string;
@@ -34,7 +33,7 @@ export const themes: Theme[] = [
       background: '#DCEEF8',
       nodeFill: '#FFFFFF',
       nodeStroke: '#77C3E3',
-      nodeText: '#0F34A8',
+      nodeText: '#3E5474',
       connection: '#B9E3FB',
       arrow: '#74E3F5',
       grid: '#B9E3FB'

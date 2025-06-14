@@ -22,6 +22,7 @@ export const MainLayout = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme | null>(themes[0]);
+  const [showProperties, setShowProperties] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -613,35 +614,6 @@ export const MainLayout = () => {
               </Button>
             </div>
         </div>
-
-        {/* Right Properties Panel - floating */}
-        {showProperties && (
-          <div className="absolute top-0 right-0 h-full w-80 bg-white/30 backdrop-blur-xl border-l border-white/20 p-6 animate-slide-in-right z-20">
-            <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
-              <h3 className="text-sm font-medium text-gray-700 mb-4">属性面板</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">填充颜色</label>
-                  <div className="flex gap-2">
-                    <div className="w-8 h-8 bg-white border rounded cursor-pointer"></div>
-                    <div className="w-8 h-8 bg-indigo-500 rounded cursor-pointer"></div>
-                    <div className="w-8 h-8 bg-emerald-500 rounded cursor-pointer"></div>
-                    <div className="w-8 h-8 bg-amber-500 rounded cursor-pointer"></div>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">边框颜色</label>
-                  <div className="flex gap-2">
-                    <div className="w-8 h-8 bg-gray-800 rounded cursor-pointer"></div>
-                    <div className="w-8 h-8 bg-indigo-600 rounded cursor-pointer"></div>
-                    <div className="w-8 h-8 bg-emerald-600 rounded cursor-pointer"></div>
-                    <div className="w-8 h-8 bg-red-500 rounded cursor-pointer"></div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
     </div>
   );
 };
