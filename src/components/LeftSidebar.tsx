@@ -19,6 +19,8 @@ interface LeftSidebarProps {
   onOpenRouterApiKeyChange: (key: string) => void;
   selectedModel: string;
   setSelectedModel: (model: string) => void;
+  language: 'zh' | 'en';
+  setLanguage: (language: 'zh' | 'en') => void;
   inputMode: 'simple' | 'long' | 'image';
   setInputMode: (mode: 'simple' | 'long' | 'image') => void;
   inputText: string;
@@ -43,6 +45,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenRouterApiKeyChange,
   selectedModel,
   setSelectedModel,
+  language,
+  setLanguage,
   inputMode,
   setInputMode,
   inputText,
@@ -80,6 +84,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         onOpenRouterApiKeyChange={onOpenRouterApiKeyChange}
         selectedModel={selectedModel}
         setSelectedModel={setSelectedModel}
+        language={language}
+        setLanguage={setLanguage}
       />
 
       {/* Input Section */}

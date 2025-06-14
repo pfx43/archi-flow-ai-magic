@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,8 @@ interface ModelProviderConfigProps {
   onOpenRouterApiKeyChange: (key: string) => void;
   selectedModel: string;
   setSelectedModel: (model: string) => void;
+  language: 'zh' | 'en';
+  setLanguage: (language: 'zh' | 'en') => void;
 }
 
 const openRouterModels = [
@@ -32,7 +35,9 @@ export const ModelProviderConfig: React.FC<ModelProviderConfigProps> = ({
   openRouterApiKey,
   onOpenRouterApiKeyChange,
   selectedModel,
-  setSelectedModel
+  setSelectedModel,
+  language,
+  setLanguage
 }) => {
   return (
     <Card>
@@ -52,6 +57,19 @@ export const ModelProviderConfig: React.FC<ModelProviderConfigProps> = ({
             <SelectContent>
               <SelectItem value="doubao">豆包大模型</SelectItem>
               <SelectItem value="openrouter">OpenRouter</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="language">架构图语言</Label>
+          <Select value={language} onValueChange={(value) => setLanguage(value as 'zh' | 'en')}>
+            <SelectTrigger id="language">
+              <SelectValue placeholder="选择语言" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="zh">中文</SelectItem>
+              <SelectItem value="en">English</SelectItem>
             </SelectContent>
           </Select>
         </div>

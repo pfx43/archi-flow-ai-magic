@@ -20,6 +20,7 @@ export const MainLayout = () => {
   const [modelProvider, setModelProvider] = useState<'doubao' | 'openrouter'>('doubao');
   const [openRouterApiKey, setOpenRouterApiKey] = useState('');
   const [selectedModel, setSelectedModel] = useState('openai/gpt-4o');
+  const [language, setLanguage] = useState<'zh' | 'en'>('zh');
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -128,6 +129,10 @@ export const MainLayout = () => {
 
   const callDoubaoApi = async (content: string) => {
     try {
+      const languagePrompt = language === 'zh' 
+        ? '请分析以下内容并提取出关键的架构组件，以JSON格式返回，包含节点名称和它们之间的关系：'
+        : 'Please analyze the following content and extract key architectural components, return in JSON format with node names and their relationships:';
+      
       const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
         method: 'POST',
         headers: {
@@ -139,7 +144,7 @@ export const MainLayout = () => {
           messages: [
             {
               role: 'user',
-              content: `请分析以下内容并提取出关键的架构组件，以JSON格式返回，包含节点名称和它们之间的关系：${content}`
+              content: `${languagePrompt}${content}`
             }
           ],
           temperature: 0.7,
@@ -164,6 +169,10 @@ export const MainLayout = () => {
       throw new Error('OpenRouter API Key is not set.');
     }
     try {
+      const languagePrompt = language === 'zh' 
+        ? '请分析以下内容并提取出关键的架构组件，以JSON格式返回，包含节点名称和它们之间的关系：'
+        : 'Please analyze the following content and extract key architectural components, return in JSON format with node names and their relationships:';
+      
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -177,7 +186,7 @@ export const MainLayout = () => {
           messages: [
             {
               role: 'user',
-              content: `请分析以下内容并提取出关键的架构组件，以JSON格式返回，包含节点名称和它们之间的关系：${content}`
+              content: `${languagePrompt}${content}`
             }
           ],
           temperature: 0.7,
@@ -199,6 +208,10 @@ export const MainLayout = () => {
 
   const callDoubaoVisionApi = async (base64Image: string) => {
     try {
+      const languagePrompt = language === 'zh'
+        ? '请分析这张架构图，并以JSON格式返回其节点和连接。JSON应该包含一个\'nodes\'数组和一个\'connections\'数组。每个节点应有 \'id\', \'label\', \'x\', \'y\'。每个连接应有 \'from\'和 \'to\'，使用节点的id。节点的x, y坐标应大致反映其在图像中的相对位置。'
+        : 'Please analyze this architecture diagram and return its nodes and connections in JSON format. The JSON should contain a \'nodes\' array and a \'connections\' array. Each node should have \'id\', \'label\', \'x\', \'y\'. Each connection should have \'from\' and \'to\', using node ids. The x, y coordinates of nodes should roughly reflect their relative positions in the image.';
+      
       const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
         method: 'POST',
         headers: {
@@ -213,10 +226,7 @@ export const MainLayout = () => {
               content: [
                 {
                   type: 'text',
-                  text: `请分析这张架构图，并以JSON格式返回其节点和连接。JSON应该包含一个'nodes'数组和一个'connections'数组。
-                  每个节点应有 'id', 'label', 'x', 'y'。
-                  每个连接应有 'from'和 'to'，使用节点的id。
-                  节点的x, y坐标应大致反映其在图像中的相对位置。`
+                  text: languagePrompt
                 },
                 {
                   type: 'image_url',
@@ -247,6 +257,10 @@ export const MainLayout = () => {
         throw new Error('OpenRouter API Key is not set.');
     }
     try {
+      const languagePrompt = language === 'zh'
+        ? '请分析这张架构图，并以JSON格式返回其节点和连接。JSON应该包含一个\'nodes\'数组和一个\'connections\'数组。每个节点应有 \'id\', \'label\', \'x\', \'y\'。每个连接应有 \'from\'和 \'to\'，使用节点的id。节点的x, y坐标应大致反映其在图像中的相对位置。'
+        : 'Please analyze this architecture diagram and return its nodes and connections in JSON format. The JSON should contain a \'nodes\' array and a \'connections\' array. Each node should have \'id\', \'label\', \'x\', \'y\'. Each connection should have \'from\' and \'to\', using node ids. The x, y coordinates of nodes should roughly reflect their relative positions in the image.';
+      
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -263,10 +277,7 @@ export const MainLayout = () => {
               content: [
                 {
                   type: 'text',
-                  text: `请分析这张架构图，并以JSON格式返回其节点和连接。JSON应该包含一个'nodes'数组和一个'connections'数组。
-                  每个节点应有 'id', 'label', 'x', 'y'。
-                  每个连接应有 'from'和 'to'，使用节点的id。
-                  节点的x, y坐标应大致反映其在图像中的相对位置。`
+                  text: languagePrompt
                 },
                 {
                   type: 'image_url',
@@ -558,6 +569,8 @@ export const MainLayout = () => {
           onOpenRouterApiKeyChange={setOpenRouterApiKey}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
+          language={language}
+          setLanguage={setLanguage}
           inputMode={inputMode}
           setInputMode={setInputMode}
           inputText={inputText}
