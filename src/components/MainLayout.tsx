@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings, Brain, Network } from 'lucide-react';
@@ -30,7 +29,7 @@ export const MainLayout = () => {
     const canvas = new FabricCanvas(canvasRef.current, {
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundColor: activeTheme?.palette.background || '#FFFFFF',
+      backgroundColor: '#FFFFFF',
     });
 
     setFabricCanvas(canvas);
@@ -38,11 +37,7 @@ export const MainLayout = () => {
     const generator = new ArchitectureGenerator(canvas);
     setArchGenerator(generator);
     
-    if (activeTheme) {
-      addDotGridBackground(canvas, activeTheme.palette.grid);
-    } else {
-      addDotGridBackground(canvas);
-    }
+    addDotGridBackground(canvas);
 
     // Panning logic
     let isPanning = false;
@@ -90,11 +85,7 @@ export const MainLayout = () => {
         width: window.innerWidth,
         height: window.innerHeight,
       });
-      if (activeTheme) {
-        addDotGridBackground(canvas, activeTheme.palette.grid);
-      } else {
-        addDotGridBackground(canvas);
-      }
+      addDotGridBackground(canvas);
       canvas.renderAll();
     };
 
@@ -104,9 +95,9 @@ export const MainLayout = () => {
       window.removeEventListener('resize', handleResize);
       canvas.dispose();
     };
-  }, [isFullscreen, activeTheme]);
+  }, [isFullscreen]);
 
-  const addDotGridBackground = (canvas: FabricCanvas, color = '#E5E7EB') => {
+  const addDotGridBackground = (canvas: FabricCanvas) => {
     const gridDots = canvas.getObjects().filter(obj => obj.get('isGridDot'));
     gridDots.forEach(dot => canvas.remove(dot));
 
@@ -121,7 +112,7 @@ export const MainLayout = () => {
           left: x,
           top: y,
           radius: 1,
-          fill: color,
+          fill: '#E5E7EB',
           selectable: false,
           evented: false,
           // @ts-ignore
@@ -362,9 +353,6 @@ export const MainLayout = () => {
     setActiveTheme(theme);
     if (!fabricCanvas) return;
     const palette = theme.palette;
-
-    fabricCanvas.backgroundColor = palette.background;
-    addDotGridBackground(fabricCanvas, palette.grid);
 
     fabricCanvas.getObjects().forEach(obj => {
         // Skip grid dots
