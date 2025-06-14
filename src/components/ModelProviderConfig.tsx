@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -17,11 +16,12 @@ interface ModelProviderConfigProps {
 }
 
 const openRouterModels = [
-    "openai/gpt-4o",
-    "openai/gpt-4-turbo",
-    "google/gemini-pro-1.5",
-    "anthropic/claude-3-opus",
-    "anthropic/claude-3.5-sonnet"
+    "google/gemini-2.5-flash-preview-05-20",
+    "google/gemini-2.5-pro-preview-06-05",
+    "anthropic/claude-4-sonnet-20250522",
+    "openai/chatgpt-4o-latest",
+    "deepseek/deepseek-r1-0528:free",
+    "qwen/qwen3-30b-a3b:free"
 ];
 
 export const ModelProviderConfig: React.FC<ModelProviderConfigProps> = ({
