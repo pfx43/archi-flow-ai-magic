@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow } from 'fabric';
 import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings } from 'lucide-react';
@@ -198,11 +199,11 @@ export const MainLayout = () => {
             fabricCanvas.add(node, text);
             
             // Animate in with updated Fabric.js v6 syntax
-            node.animate('opacity', 1, {
+            node.animate({ opacity: 1 }, {
               duration: 500,
               onChange: () => fabricCanvas.renderAll()
             });
-            text.animate('opacity', 1, {
+            text.animate({ opacity: 1 }, {
               duration: 500,
               onChange: () => fabricCanvas.renderAll()
             });
@@ -234,7 +235,8 @@ export const MainLayout = () => {
           height: 60,
           rx: 8,
           ry: 8,
-          shadow: nodeShadow
+          shadow: nodeShadow,
+          opacity: 0
         });
 
         const fallbackText = new FabricText('API调用失败', {
@@ -243,11 +245,21 @@ export const MainLayout = () => {
           fontFamily: 'system-ui',
           fontSize: 12,
           fill: '#1F2937',
-          fontWeight: '500'
+          fontWeight: '500',
+          opacity: 0
         });
 
         fabricCanvas.add(fallbackNode, fallbackText);
-        fabricCanvas.renderAll();
+
+        fallbackNode.animate({ opacity: 1 }, {
+          duration: 500,
+          onChange: () => fabricCanvas.renderAll()
+        });
+
+        fallbackText.animate({ opacity: 1 }, {
+          duration: 500,
+          onChange: () => fabricCanvas.renderAll()
+        });
       }
     } finally {
       setIsGenerating(false);
