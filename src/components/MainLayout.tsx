@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Canvas as FabricCanvas, Rect, Circle, FabricText } from 'fabric';
+import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow } from 'fabric';
 import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,6 +42,19 @@ export const MainLayout = () => {
 
     setFabricCanvas(canvas);
 
+    // Create shadow with proper Fabric.js v6 properties
+    const nodeShadow = new Shadow({
+      color: 'rgba(0,0,0,0.1)',
+      blur: 10,
+      offsetX: 0,
+      offsetY: 4,
+      affectStroke: false,
+      includeDefaultValues: true,
+      nonScaling: false,
+      id: 0,
+      type: 'shadow'
+    });
+
     // Add sample nodes for demonstration
     const node1 = new Rect({
       left: 100,
@@ -53,12 +66,7 @@ export const MainLayout = () => {
       height: 80,
       rx: 8,
       ry: 8,
-      shadow: {
-        color: 'rgba(0,0,0,0.1)',
-        blur: 10,
-        offsetX: 0,
-        offsetY: 4
-      }
+      shadow: nodeShadow
     });
 
     const text1 = new FabricText('用户界面', {
@@ -80,12 +88,7 @@ export const MainLayout = () => {
       height: 80,
       rx: 8,
       ry: 8,
-      shadow: {
-        color: 'rgba(0,0,0,0.1)',
-        blur: 10,
-        offsetX: 0,
-        offsetY: 4
-      }
+      shadow: nodeShadow
     });
 
     const text2 = new FabricText('API网关', {
@@ -116,6 +119,19 @@ export const MainLayout = () => {
         fabricCanvas.clear();
         fabricCanvas.backgroundColor = '#F8FAFC';
         
+        // Create shadow for new nodes
+        const nodeShadow = new Shadow({
+          color: 'rgba(0,0,0,0.1)',
+          blur: 10,
+          offsetX: 0,
+          offsetY: 4,
+          affectStroke: false,
+          includeDefaultValues: true,
+          nonScaling: false,
+          id: 0,
+          type: 'shadow'
+        });
+        
         // Generate nodes with organic animation
         const nodes = [
           { text: '前端组件', x: 150, y: 100, color: '#4F46E5' },
@@ -137,12 +153,7 @@ export const MainLayout = () => {
               rx: 8,
               ry: 8,
               opacity: 0,
-              shadow: {
-                color: 'rgba(0,0,0,0.1)',
-                blur: 10,
-                offsetX: 0,
-                offsetY: 4
-              }
+              shadow: nodeShadow
             });
 
             const text = new FabricText(nodeData.text, {
@@ -157,17 +168,17 @@ export const MainLayout = () => {
 
             fabricCanvas.add(node, text);
             
-            // Animate in
+            // Animate in with updated Fabric.js v6 syntax
             node.animate('opacity', 1, {
               duration: 500,
-              easing: function(t: number) { return t * t * (3 - 2 * t); }
+              easing: function(t: number) { return t * t * (3 - 2 * t); },
+              onChange: () => fabricCanvas.renderAll()
             });
             text.animate('opacity', 1, {
               duration: 500,
-              easing: function(t: number) { return t * t * (3 - 2 * t); }
+              easing: function(t: number) { return t * t * (3 - 2 * t); },
+              onChange: () => fabricCanvas.renderAll()
             });
-            
-            fabricCanvas.renderAll();
           }, index * 200);
         });
       }
@@ -178,6 +189,19 @@ export const MainLayout = () => {
   const handleToolClick = (tool: typeof activeTool) => {
     setActiveTool(tool);
     if (!fabricCanvas) return;
+
+    // Create shadow for new elements
+    const elementShadow = new Shadow({
+      color: 'rgba(0,0,0,0.1)',
+      blur: 10,
+      offsetX: 0,
+      offsetY: 4,
+      affectStroke: false,
+      includeDefaultValues: true,
+      nonScaling: false,
+      id: 0,
+      type: 'shadow'
+    });
 
     if (tool === 'rectangle') {
       const rect = new Rect({
@@ -190,12 +214,7 @@ export const MainLayout = () => {
         height: 60,
         rx: 8,
         ry: 8,
-        shadow: {
-          color: 'rgba(0,0,0,0.1)',
-          blur: 10,
-          offsetX: 0,
-          offsetY: 4
-        }
+        shadow: elementShadow
       });
       fabricCanvas.add(rect);
       fabricCanvas.renderAll();
@@ -207,12 +226,7 @@ export const MainLayout = () => {
         stroke: '#22D3EE',
         strokeWidth: 2,
         radius: 40,
-        shadow: {
-          color: 'rgba(0,0,0,0.1)',
-          blur: 10,
-          offsetX: 0,
-          offsetY: 4
-        }
+        shadow: elementShadow
       });
       fabricCanvas.add(circle);
       fabricCanvas.renderAll();
