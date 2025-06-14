@@ -48,11 +48,7 @@ export const MainLayout = () => {
       blur: 10,
       offsetX: 0,
       offsetY: 4,
-      affectStroke: false,
-      includeDefaultValues: true,
-      nonScaling: false,
-      id: 0,
-      type: 'shadow'
+      affectStroke: false
     });
 
     // Add sample nodes for demonstration
@@ -125,11 +121,7 @@ export const MainLayout = () => {
           blur: 10,
           offsetX: 0,
           offsetY: 4,
-          affectStroke: false,
-          includeDefaultValues: true,
-          nonScaling: false,
-          id: 0,
-          type: 'shadow'
+          affectStroke: false
         });
         
         // Generate nodes with organic animation
@@ -196,11 +188,7 @@ export const MainLayout = () => {
       blur: 10,
       offsetX: 0,
       offsetY: 4,
-      affectStroke: false,
-      includeDefaultValues: true,
-      nonScaling: false,
-      id: 0,
-      type: 'shadow'
+      affectStroke: false
     });
 
     if (tool === 'rectangle') {
