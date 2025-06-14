@@ -11,7 +11,7 @@ export const MainLayout = () => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [inputText, setInputText] = useState('');
   const [inputMode, setInputMode] = useState<'simple' | 'long' | 'image'>('simple');
-  const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle'>('select');
+  const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle' | 'hexagon'>('select');
   const [isGenerating, setIsGenerating] = useState(false);
   const [apiKey, setApiKey] = useState('66517a68-24bb-4f60-94dc-1fe4c3b89e26');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -416,7 +416,7 @@ export const MainLayout = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleToolClick = (tool: 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle') => {
+  const handleToolClick = (tool: 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle' | 'hexagon') => {
     setActiveTool(tool);
     if (!fabricCanvas || !activeTheme) return;
 
@@ -469,7 +469,7 @@ export const MainLayout = () => {
         });
         fabricCanvas.add(text);
         fabricCanvas.renderAll();
-    } else if (tool === 'diamond' || tool === 'triangle') {
+    } else if (tool === 'diamond' || tool === 'triangle' || tool === 'hexagon') {
       // Use ArchitectureGenerator for complex shapes
       if (archGenerator) {
         const shape = archGenerator.createShape(tool, 200, 200, palette);

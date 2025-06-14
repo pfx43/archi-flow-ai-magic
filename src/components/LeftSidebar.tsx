@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Wand2, FileText, Upload, Brain, Network, Square, Circle as CircleIcon, Type, Move, Triangle, Hexagon, Diamond } from 'lucide-react';
+import { Wand2, FileText, Upload, Brain, Network, Square, Circle as CircleIcon, Type, Move, Triangle, Hexagon, Diamond, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -32,8 +32,8 @@ interface LeftSidebarProps {
   activeTheme: Theme | null;
   handleThemeSelect: (theme: Theme) => void;
   activeTool: string;
-  setActiveTool: (tool: 'select' | 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle') => void;
-  handleToolClick: (tool: 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle') => void;
+  setActiveTool: (tool: 'select' | 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle' | 'hexagon') => void;
+  handleToolClick: (tool: 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle' | 'hexagon') => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -177,6 +177,15 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <Network className="w-4 h-4 mr-2" />
             频谱域架构
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => archGenerator && activeTheme && archGenerator.generateSAFAArchitecture(activeTheme.palette)}
+            className="w-full justify-start"
+          >
+            <Layers className="w-4 h-4 mr-2" />
+            SAFA 网络架构
+          </Button>
         </div>
       </Card>
 
@@ -237,6 +246,15 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           >
             <Triangle className="w-4 h-4 mr-2" />
             三角形
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTool === 'hexagon' ? 'default' : 'outline'}
+            onClick={() => handleToolClick('hexagon')}
+            className="justify-start"
+          >
+            <Hexagon className="w-4 h-4 mr-2" />
+            六边形
           </Button>
         </div>
       </Card>

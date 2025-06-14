@@ -127,6 +127,58 @@ export class ArchitectureGenerator {
     this.canvas.renderAll();
   }
 
+  generateSAFAArchitecture(palette: Palette) {
+    this.clearDiagramElements();
+
+    const nodes: ArchitectureNode[] = [
+      // SAFA Network Container
+      { id: 'safa_container', label: '(a) SAFA Network', type: 'process', x: 50, y: 50, width: 300, height: 400, color: 'rgba(0,0,0,0.03)' },
+      
+      // Inputs
+      { id: 'input_l', label: 'I_t^L, I_t-1^R', type: 'input', x: 100, y: 100, width: 120, height: 40 },
+      { id: 'input_t', label: 'time-step t', type: 'input', x: 230, y: 100, width: 100, height: 40 },
+
+      // Main blocks
+      { id: 'extract_feature', label: 'Extract Feature', type: 'process', x: 100, y: 170, width: 120, height: 50 },
+      { id: 'safe_block', label: 'SAFE Block', type: 'process', x: 100, y: 250, width: 120, height: 50 },
+      { id: 'warping', label: 'Warping', type: 'process', x: 240, y: 250, width: 80, height: 50 },
+      { id: 'reconstruction', label: 'Reconstruction\nModel', type: 'process', x: 100, y: 330, width: 120, height: 50 },
+      { id: 'output', label: 'γ_SR^t', type: 'output', x: 100, y: 410, width: 120, height: 40 },
+
+      // Iteration arrow (as text for simplicity)
+      { id: 'iteration_text', label: 'iteration++', type: 'process', x: 230, y: 200, width: 80, height: 30, color: 'transparent' },
+    ];
+
+    const connections: ArchitectureConnection[] = [
+      { from: 'input_l', to: 'extract_feature', type: 'forward' },
+      { from: 'input_t', to: 'safe_block', type: 'forward' },
+      { from: 'extract_feature', to: 'safe_block', type: 'forward' },
+      { from: 'safe_block', to: 'warping', type: 'forward' },
+      { from: 'safe_block', to: 'reconstruction', type: 'forward' },
+      { from: 'reconstruction', to: 'output', type: 'forward' },
+    ];
+    
+    this.createNodes(nodes, palette);
+    this.createConnections(nodes, connections, palette);
+
+    // Custom iteration arrow
+    const line = new Path('M 230 275 C 260 275, 260 225, 230 225', {
+      fill: '',
+      stroke: palette.connection,
+      strokeWidth: 2,
+      strokeDashArray: [5, 5],
+      objectCaching: false,
+    });
+    const arrow = new Path('M 230 225 L 225 230 L 235 230 z', {
+        fill: palette.connection,
+    });
+    line.set('isDiagramElement', true);
+    arrow.set('isDiagramElement', true);
+    this.canvas.add(line, arrow);
+    
+    this.canvas.renderAll();
+  }
+
   generateFromData(nodes: ArchitectureNode[], connections: ArchitectureConnection[], palette: Palette) {
     this.clearDiagramElements();
     this.createNodes(nodes, palette);
@@ -315,20 +367,33 @@ export class ArchitectureGenerator {
       case 'diamond':
         const diamondPoints = [
           { x: 50, y: 0 },
-          { x: 100, y: 30 },
-          { x: 50, y: 60 },
-          { x: 0, y: 30 }
+          { x: 100, y: 40 },
+          { x: 50, y: 80 },
+          { x: 0, y: 40 }
         ];
-        return new Polygon(diamondPoints, baseProps);
+        return new Polygon(diamondPoints, { ...baseProps });
       
       case 'triangle':
         const trianglePoints = [
           { x: 50, y: 0 },
-          { x: 100, y: 60 },
-          { x: 0, y: 60 }
+          { x: 100, y: 80 },
+          { x: 0, y: 80 }
         ];
-        return new Polygon(trianglePoints, baseProps);
+        return new Polygon(trianglePoints, { ...baseProps });
       
+      case 'hexagon':
+        const width = 100;
+        const height = 80;
+        const hexPoints = [
+            { x: width * 0.25, y: 0 },
+            { x: width * 0.75, y: 0 },
+            { x: width, y: height * 0.5 },
+            { x: width * 0.75, y: height },
+            { x: width * 0.25, y: height },
+            { x: 0, y: height * 0.5 }
+        ];
+        return new Polygon(hexPoints, baseProps);
+
       default:
         return null;
     }
