@@ -30,6 +30,12 @@ export const MainLayout = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme | null>(themes[0]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const templates: Template[] = [
+    { id: 'template1', name: '科技蓝', style: 'bg-blue-500', preview: 'AI' },
+    { id: 'template2', name: '活力橙', style: 'bg-orange-500', preview: 'ML' },
+    { id: 'template3', name: '清新绿', style: 'bg-green-500', preview: 'DL' },
+  ];
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -597,33 +603,7 @@ export const MainLayout = () => {
           <ThemeSelector activeTheme={activeTheme} onThemeSelect={handleThemeSelect} />
 
           {/* Templates */}
-          <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30 flex-1">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-700">模板风格</h3>
-              <Layers className="w-4 h-4 text-gray-400" />
-            </div>
-            <div className="space-y-2">
-              {templates.map((template) => (
-                <div
-                  key={template.id}
-                  onClick={() => setSelectedTemplate(template.id)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                    selectedTemplate === template.id
-                      ? 'bg-white/70 shadow-md ring-2 ring-indigo-500/20'
-                      : 'hover:bg-white/50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-md ${template.style} flex items-center justify-center text-white font-bold text-sm`}>
-                    {template.preview}
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">{template.name}</span>
-                  {selectedTemplate === template.id && (
-                    <Badge variant="secondary" className="ml-auto text-xs">当前</Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
+          
         </div>
 
         {/* Top Bar - floating */}
