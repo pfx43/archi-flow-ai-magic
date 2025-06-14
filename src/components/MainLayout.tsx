@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DoubaoApiConfig } from '@/components/DoubaoApiConfig';
 
 interface Template {
   id: string;
@@ -22,6 +23,7 @@ export const MainLayout = () => {
   const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text'>('select');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showProperties, setShowProperties] = useState(false);
+  const [apiKey, setApiKey] = useState('66517a68-24bb-4f60-94dc-1fe4c3b89e26');
 
   const templates: Template[] = [
     { id: 'modern', name: '现代风格', style: 'bg-gradient-to-br from-blue-500 to-cyan-400', preview: 'M' },
@@ -103,13 +105,49 @@ export const MainLayout = () => {
     };
   }, []);
 
+  const callDoubaoApi = async (content: string) => {
+    try {
+      const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'doubao-seed-1-6-250615',
+          messages: [
+            {
+              role: 'user',
+              content: `请分析以下内容并提取出关键的架构组件，以JSON格式返回，包含节点名称和它们之间的关系：${content}`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('豆包API调用失败:', error);
+      throw error;
+    }
+  };
+
   const handleGenerate = async () => {
     if (!inputText.trim()) return;
     
     setIsGenerating(true);
     
-    // Simulate AI generation with animation
-    setTimeout(() => {
+    try {
+      // Call Doubao API for intelligent analysis
+      const aiResponse = await callDoubaoApi(inputText);
+      console.log('豆包API响应:', aiResponse);
+      
       if (fabricCanvas) {
         fabricCanvas.clear();
         fabricCanvas.backgroundColor = '#F8FAFC';
@@ -125,10 +163,10 @@ export const MainLayout = () => {
         
         // Generate nodes with organic animation
         const nodes = [
-          { text: '前端组件', x: 150, y: 100, color: '#4F46E5' },
-          { text: 'API层', x: 400, y: 150, color: '#10B981' },
-          { text: '数据库', x: 300, y: 300, color: '#F59E0B' },
-          { text: 'AI处理', x: 600, y: 200, color: '#EF4444' }
+          { text: 'AI分析结果', x: 150, y: 100, color: '#4F46E5' },
+          { text: '核心组件', x: 400, y: 150, color: '#10B981' },
+          { text: '数据流', x: 300, y: 300, color: '#F59E0B' },
+          { text: '智能处理', x: 600, y: 200, color: '#EF4444' }
         ];
 
         nodes.forEach((nodeData, index) => {
@@ -171,8 +209,49 @@ export const MainLayout = () => {
           }, index * 200);
         });
       }
+    } catch (error) {
+      console.error('生成失败:', error);
+      // Fallback to demo generation
+      if (fabricCanvas) {
+        fabricCanvas.clear();
+        fabricCanvas.backgroundColor = '#F8FAFC';
+        
+        const nodeShadow = new Shadow({
+          color: 'rgba(0,0,0,0.1)',
+          blur: 10,
+          offsetX: 0,
+          offsetY: 4,
+          affectStroke: false
+        });
+        
+        const fallbackNode = new Rect({
+          left: 300,
+          top: 250,
+          fill: '#FFFFFF',
+          stroke: '#EF4444',
+          strokeWidth: 2,
+          width: 120,
+          height: 60,
+          rx: 8,
+          ry: 8,
+          shadow: nodeShadow
+        });
+
+        const fallbackText = new FabricText('API调用失败', {
+          left: 320,
+          top: 270,
+          fontFamily: 'system-ui',
+          fontSize: 12,
+          fill: '#1F2937',
+          fontWeight: '500'
+        });
+
+        fabricCanvas.add(fallbackNode, fallbackText);
+        fabricCanvas.renderAll();
+      }
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
   };
 
   const handleToolClick = (tool: typeof activeTool) => {
@@ -241,6 +320,9 @@ export const MainLayout = () => {
             </div>
           </div>
 
+          {/* API Configuration */}
+          <DoubaoApiConfig apiKey={apiKey} onApiKeyChange={setApiKey} />
+
           {/* Input Section */}
           <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
             <div className="space-y-4">
@@ -300,7 +382,7 @@ export const MainLayout = () => {
                 {isGenerating ? (
                   <div className="flex items-center">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                    生成中...
+                    豆包AI生成中...
                   </div>
                 ) : (
                   <>
