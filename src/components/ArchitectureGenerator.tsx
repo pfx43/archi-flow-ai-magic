@@ -125,7 +125,7 @@ export class ArchitectureGenerator {
           evented: false,
         });
         this.canvas.add(dot);
-        this.canvas.sendToBack(dot);
+        this.canvas.sendObjectToBack(dot);
       }
     }
   }
@@ -204,8 +204,8 @@ export class ArchitectureGenerator {
       });
 
       this.canvas.add(line, arrowHead);
-      this.canvas.sendToBack(line);
-      this.canvas.sendToBack(arrowHead);
+      this.canvas.sendObjectToBack(line);
+      this.canvas.sendObjectToBack(arrowHead);
     });
   }
 }

@@ -85,7 +85,7 @@ export const MainLayout = () => {
           evented: false,
         });
         canvas.add(dot);
-        canvas.sendToBack(dot);
+        canvas.sendObjectToBack(dot);
       }
     }
   };
