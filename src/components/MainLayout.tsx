@@ -173,7 +173,7 @@ export const MainLayout = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-8          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'doubao-pro-32k',
