@@ -11,7 +11,7 @@ export const MainLayout = () => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [inputText, setInputText] = useState('');
   const [inputMode, setInputMode] = useState<'simple' | 'long' | 'image'>('simple');
-  const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text'>('select');
+  const [activeTool, setActiveTool] = useState<'select' | 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle'>('select');
   const [isGenerating, setIsGenerating] = useState(false);
   const [apiKey, setApiKey] = useState('66517a68-24bb-4f60-94dc-1fe4c3b89e26');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -38,15 +38,16 @@ export const MainLayout = () => {
     
     addDotGridBackground(canvas);
 
-    // Panning logic
+    // Enhanced panning logic with middle mouse button support
     let isPanning = false;
     let lastPosX = 0;
     let lastPosY = 0;
 
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
-        // Middle mouse button or Alt+click for panning
+        // Middle mouse button (button === 1) or Alt+click for panning
         if (evt instanceof MouseEvent && (evt.button === 1 || evt.altKey)) {
+            evt.preventDefault(); // Prevent default middle click behavior
             isPanning = true;
             this.selection = false; // Disable selection during pan
             lastPosX = evt.clientX;
@@ -72,13 +73,24 @@ export const MainLayout = () => {
         }
     });
 
-    canvas.on('mouse:up', function() {
+    canvas.on('mouse:up', function(opt) {
         if (isPanning) {
+            const evt = opt.e;
+            if (evt instanceof MouseEvent && evt.button === 1) {
+                evt.preventDefault();
+            }
             this.setViewportTransform(this.viewportTransform || [1, 0, 0, 1, 0, 0]);
             isPanning = false;
             this.selection = true; // Re-enable selection
             this.defaultCursor = 'default';
             this.requestRenderAll();
+        }
+    });
+
+    // Prevent context menu on middle click
+    canvas.upperCanvasEl.addEventListener('contextmenu', (e) => {
+        if (e.button === 1) {
+            e.preventDefault();
         }
     });
 
@@ -404,7 +416,7 @@ export const MainLayout = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleToolClick = (tool: 'rectangle' | 'circle' | 'text') => {
+  const handleToolClick = (tool: 'rectangle' | 'circle' | 'text' | 'diamond' | 'triangle') => {
     setActiveTool(tool);
     if (!fabricCanvas || !activeTheme) return;
 
@@ -457,6 +469,15 @@ export const MainLayout = () => {
         });
         fabricCanvas.add(text);
         fabricCanvas.renderAll();
+    } else if (tool === 'diamond' || tool === 'triangle') {
+      // Use ArchitectureGenerator for complex shapes
+      if (archGenerator) {
+        const shape = archGenerator.createShape(tool, 200, 200, palette);
+        if (shape) {
+          fabricCanvas.add(shape);
+          fabricCanvas.renderAll();
+        }
+      }
     }
   };
 
@@ -550,7 +571,7 @@ export const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
         {/* Center Canvas - positioned at the bottom layer */}
         <div className="absolute inset-0 z-0">
             <canvas
@@ -559,7 +580,7 @@ export const MainLayout = () => {
             />
         </div>
 
-        {/* Left Sidebar */}
+        {/* Left Sidebar - Now floating */}
         <LeftSidebar
           apiKey={apiKey}
           onApiKeyChange={setApiKey}

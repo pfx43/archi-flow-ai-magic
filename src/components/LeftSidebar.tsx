@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Wand2, FileText, Upload, Brain, Network, Square, Circle as CircleIcon, Type, Move } from 'lucide-react';
+import { Wand2, FileText, Upload, Brain, Network, Square, Circle as CircleIcon, Type, Move, Triangle, Hexagon, Diamond } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -62,10 +62,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   handleToolClick
 }) => {
   return (
-    <div className="absolute top-0 left-0 h-full w-80 bg-white border-r border-gray-200 p-6 flex flex-col gap-6 z-20 overflow-y-auto hide-scrollbar">
+    <div className="absolute top-4 left-4 w-80 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl p-6 flex flex-col gap-6 z-20 max-h-[calc(100vh-2rem)] overflow-y-auto hide-scrollbar">
       {/* Logo */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg">
           <Wand2 className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -89,7 +89,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       />
 
       {/* Input Section */}
-      <Card className="p-4">
+      <Card className="p-4 bg-white/80 backdrop-blur-sm border-gray-200/50">
         <div className="space-y-4">
           <div className="flex gap-2">
             <Button
@@ -117,7 +117,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               placeholder={inputMode === 'simple' ? "描述您想要的架构图..." : "粘贴论文或技术文档内容..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="min-h-[100px] transition-all duration-300"
+              className="min-h-[100px] transition-all duration-300 bg-white/70"
             />
           </div>
 
@@ -156,7 +156,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       </Card>
 
       {/* Quick Architecture Templates */}
-      <Card className="p-4">
+      <Card className="p-4 bg-white/80 backdrop-blur-sm border-gray-200/50">
         <h3 className="text-sm font-medium text-gray-700 mb-3">快速生成</h3>
         <div className="space-y-2">
           <Button
@@ -180,8 +180,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         </div>
       </Card>
 
-      {/* Tools */}
-      <Card className="p-4">
+      {/* Enhanced Tools with more shapes */}
+      <Card className="p-4 bg-white/80 backdrop-blur-sm border-gray-200/50">
         <h3 className="text-sm font-medium text-gray-700 mb-3">编辑工具</h3>
         <div className="grid grid-cols-2 gap-2">
           <Button
@@ -219,6 +219,24 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           >
             <Type className="w-4 h-4 mr-2" />
             文本
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTool === 'diamond' ? 'default' : 'outline'}
+            onClick={() => handleToolClick('diamond')}
+            className="justify-start"
+          >
+            <Diamond className="w-4 h-4 mr-2" />
+            菱形
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTool === 'triangle' ? 'default' : 'outline'}
+            onClick={() => handleToolClick('triangle')}
+            className="justify-start"
+          >
+            <Triangle className="w-4 h-4 mr-2" />
+            三角形
           </Button>
         </div>
       </Card>
