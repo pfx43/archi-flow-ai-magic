@@ -1,12 +1,13 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow } from 'fabric';
-import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings } from 'lucide-react';
+import { Upload, Wand2, FileText, Image, Layers, Square, Circle as CircleIcon, Type, Move, Settings, Brain, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DoubaoApiConfig } from '@/components/DoubaoApiConfig';
+import { ImageUploadHandler } from '@/components/ImageUploadHandler';
+import { ArchitectureGenerator } from '@/components/ArchitectureGenerator';
 
 interface Template {
   id: string;
@@ -25,6 +26,8 @@ export const MainLayout = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showProperties, setShowProperties] = useState(false);
   const [apiKey, setApiKey] = useState('66517a68-24bb-4f60-94dc-1fe4c3b89e26');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [archGenerator, setArchGenerator] = useState<ArchitectureGenerator | null>(null);
 
   const templates: Template[] = [
     { id: 'modern', name: '现代风格', style: 'bg-gradient-to-br from-blue-500 to-cyan-400', preview: 'M' },
@@ -37,74 +40,55 @@ export const MainLayout = () => {
     if (!canvasRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
-      backgroundColor: '#F8FAFC',
+      width: window.innerWidth - (isFullscreen ? 0 : 320),
+      height: window.innerHeight - (isFullscreen ? 0 : 64),
+      backgroundColor: '#FFFFFF',
     });
 
     setFabricCanvas(canvas);
+    
+    const generator = new ArchitectureGenerator(canvas);
+    setArchGenerator(generator);
 
-    // Create shadow with proper Fabric.js v6 properties
-    const nodeShadow = new Shadow({
-      color: 'rgba(0,0,0,0.1)',
-      blur: 10,
-      offsetX: 0,
-      offsetY: 4,
-      affectStroke: false
-    });
+    // Add dot grid background
+    addDotGridBackground(canvas);
 
-    // Add sample nodes for demonstration
-    const node1 = new Rect({
-      left: 100,
-      top: 100,
-      fill: '#FFFFFF',
-      stroke: '#4F46E5',
-      strokeWidth: 2,
-      width: 120,
-      height: 80,
-      rx: 8,
-      ry: 8,
-      shadow: nodeShadow
-    });
+    const handleResize = () => {
+      canvas.setDimensions({
+        width: window.innerWidth - (isFullscreen ? 0 : 320),
+        height: window.innerHeight - (isFullscreen ? 0 : 64),
+      });
+      canvas.renderAll();
+    };
 
-    const text1 = new FabricText('用户界面', {
-      left: 120,
-      top: 125,
-      fontFamily: 'system-ui',
-      fontSize: 14,
-      fill: '#1F2937',
-      fontWeight: '500'
-    });
-
-    const node2 = new Rect({
-      left: 300,
-      top: 200,
-      fill: '#FFFFFF',
-      stroke: '#10B981',
-      strokeWidth: 2,
-      width: 120,
-      height: 80,
-      rx: 8,
-      ry: 8,
-      shadow: nodeShadow
-    });
-
-    const text2 = new FabricText('API网关', {
-      left: 330,
-      top: 225,
-      fontFamily: 'system-ui',
-      fontSize: 14,
-      fill: '#1F2937',
-      fontWeight: '500'
-    });
-
-    canvas.add(node1, text1, node2, text2);
-    canvas.renderAll();
+    window.addEventListener('resize', handleResize);
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       canvas.dispose();
     };
-  }, []);
+  }, [isFullscreen]);
+
+  const addDotGridBackground = (canvas: FabricCanvas) => {
+    const spacing = 20;
+    const canvasWidth = canvas.width || 1200;
+    const canvasHeight = canvas.height || 800;
+
+    for (let x = 0; x <= canvasWidth; x += spacing) {
+      for (let y = 0; y <= canvasHeight; y += spacing) {
+        const dot = new Circle({
+          left: x,
+          top: y,
+          radius: 1,
+          fill: '#E5E7EB',
+          selectable: false,
+          evented: false,
+        });
+        canvas.add(dot);
+        canvas.sendToBack(dot);
+      }
+    }
+  };
 
   const callDoubaoApi = async (content: string) => {
     try {
@@ -140,130 +124,42 @@ export const MainLayout = () => {
   };
 
   const handleGenerate = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !archGenerator) return;
     
     setIsGenerating(true);
     
     try {
-      // Call Doubao API for intelligent analysis
-      const aiResponse = await callDoubaoApi(inputText);
-      console.log('豆包API响应:', aiResponse);
-      
-      if (fabricCanvas) {
-        fabricCanvas.clear();
-        fabricCanvas.backgroundColor = '#F8FAFC';
+      // Determine architecture type based on input
+      if (inputText.includes('multimodal') || inputText.includes('多模态') || inputText.includes('text') && inputText.includes('image')) {
+        archGenerator.generateMultiModalArchitecture();
+      } else if (inputText.includes('spectral') || inputText.includes('频谱') || inputText.includes('graph') || inputText.includes('图')) {
+        archGenerator.generateSpectralDomainArchitecture();
+      } else {
+        // Call Doubao API for intelligent analysis
+        const aiResponse = await callDoubaoApi(inputText);
+        console.log('豆包API响应:', aiResponse);
         
-        // Create shadow for new nodes
-        const nodeShadow = new Shadow({
-          color: 'rgba(0,0,0,0.1)',
-          blur: 10,
-          offsetX: 0,
-          offsetY: 4,
-          affectStroke: false
-        });
-        
-        // Generate nodes with organic animation
-        const nodes = [
-          { text: 'AI分析结果', x: 150, y: 100, color: '#4F46E5' },
-          { text: '核心组件', x: 400, y: 150, color: '#10B981' },
-          { text: '数据流', x: 300, y: 300, color: '#F59E0B' },
-          { text: '智能处理', x: 600, y: 200, color: '#EF4444' }
-        ];
-
-        nodes.forEach((nodeData, index) => {
-          setTimeout(() => {
-            const node = new Rect({
-              left: nodeData.x,
-              top: nodeData.y,
-              fill: '#FFFFFF',
-              stroke: nodeData.color,
-              strokeWidth: 2,
-              width: 100,
-              height: 60,
-              rx: 8,
-              ry: 8,
-              opacity: 0,
-              shadow: nodeShadow
-            });
-
-            const text = new FabricText(nodeData.text, {
-              left: nodeData.x + 15,
-              top: nodeData.y + 20,
-              fontFamily: 'system-ui',
-              fontSize: 12,
-              fill: '#1F2937',
-              fontWeight: '500',
-              opacity: 0
-            });
-
-            fabricCanvas.add(node, text);
-            
-            // Animate in with updated Fabric.js v6 syntax
-            node.animate({ opacity: 1 }, {
-              duration: 500,
-              onChange: () => fabricCanvas.renderAll()
-            });
-            text.animate({ opacity: 1 }, {
-              duration: 500,
-              onChange: () => fabricCanvas.renderAll()
-            });
-          }, index * 200);
-        });
+        // Generate based on AI response
+        if (aiResponse.includes('multimodal') || aiResponse.includes('encoder')) {
+          archGenerator.generateMultiModalArchitecture();
+        } else {
+          archGenerator.generateSpectralDomainArchitecture();
+        }
       }
     } catch (error) {
       console.error('生成失败:', error);
-      // Fallback to demo generation
-      if (fabricCanvas) {
-        fabricCanvas.clear();
-        fabricCanvas.backgroundColor = '#F8FAFC';
-        
-        const nodeShadow = new Shadow({
-          color: 'rgba(0,0,0,0.1)',
-          blur: 10,
-          offsetX: 0,
-          offsetY: 4,
-          affectStroke: false
-        });
-        
-        const fallbackNode = new Rect({
-          left: 300,
-          top: 250,
-          fill: '#FFFFFF',
-          stroke: '#EF4444',
-          strokeWidth: 2,
-          width: 120,
-          height: 60,
-          rx: 8,
-          ry: 8,
-          shadow: nodeShadow,
-          opacity: 0
-        });
-
-        const fallbackText = new FabricText('API调用失败', {
-          left: 320,
-          top: 270,
-          fontFamily: 'system-ui',
-          fontSize: 12,
-          fill: '#1F2937',
-          fontWeight: '500',
-          opacity: 0
-        });
-
-        fabricCanvas.add(fallbackNode, fallbackText);
-
-        fallbackNode.animate({ opacity: 1 }, {
-          duration: 500,
-          onChange: () => fabricCanvas.renderAll()
-        });
-
-        fallbackText.animate({ opacity: 1 }, {
-          duration: 500,
-          onChange: () => fabricCanvas.renderAll()
-        });
+      // Fallback to default generation
+      if (archGenerator) {
+        archGenerator.generateMultiModalArchitecture();
       }
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleImageUpload = (file: File) => {
+    setInputMode('image');
+    console.log('图片上传成功:', file.name);
   };
 
   const handleToolClick = (tool: typeof activeTool) => {
@@ -309,12 +205,36 @@ export const MainLayout = () => {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setInputMode('image');
-    }
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
+
+  if (isFullscreen) {
+    return (
+      <div className="min-h-screen bg-white relative">
+        {/* Floating controls */}
+        <div className="absolute top-4 left-4 z-10 flex gap-2">
+          <Button onClick={toggleFullscreen} variant="outline" size="sm">
+            退出全屏
+          </Button>
+          <Button onClick={() => archGenerator?.generateMultiModalArchitecture()} variant="outline" size="sm">
+            <Brain className="w-4 h-4 mr-2" />
+            多模态架构
+          </Button>
+          <Button onClick={() => archGenerator?.generateSpectralDomainArchitecture()} variant="outline" size="sm">
+            <Network className="w-4 h-4 mr-2" />
+            频谱域架构
+          </Button>
+        </div>
+
+        {/* Full screen canvas */}
+        <canvas
+          ref={canvasRef}
+          className="block w-full h-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -369,12 +289,9 @@ export const MainLayout = () => {
               </div>
 
               <div className="flex gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
+                <ImageUploadHandler
+                  fabricCanvas={fabricCanvas}
+                  onImageUpload={handleImageUpload}
                 />
                 <label htmlFor="file-upload" className="flex-1">
                   <Button variant="outline" className="w-full" asChild>
@@ -402,6 +319,31 @@ export const MainLayout = () => {
                     智能生成
                   </>
                 )}
+              </Button>
+            </div>
+          </Card>
+
+          {/* Quick Architecture Templates */}
+          <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">快速生成</h3>
+            <div className="space-y-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => archGenerator?.generateMultiModalArchitecture()}
+                className="w-full justify-start"
+              >
+                <Brain className="w-4 h-4 mr-2" />
+                多模态架构
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => archGenerator?.generateSpectralDomainArchitecture()}
+                className="w-full justify-start"
+              >
+                <Network className="w-4 h-4 mr-2" />
+                频谱域架构
               </Button>
             </div>
           </Card>
@@ -484,10 +426,13 @@ export const MainLayout = () => {
           {/* Top Bar */}
           <div className="h-16 bg-white/30 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold text-gray-800">无标题项目</h2>
-              <Badge variant="outline" className="text-xs">未保存</Badge>
+              <h2 className="text-lg font-semibold text-gray-800">架构图设计</h2>
+              <Badge variant="outline" className="text-xs">实时编辑</Badge>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+                全屏模式
+              </Button>
               <Button variant="outline" size="sm">
                 <Image className="w-4 h-4 mr-2" />
                 导出PNG
@@ -506,14 +451,11 @@ export const MainLayout = () => {
           </div>
 
           {/* Canvas Area */}
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-white/20">
-              <canvas
-                ref={canvasRef}
-                className="block"
-                style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.05)' }}
-              />
-            </div>
+          <div className="flex-1 bg-white relative overflow-hidden">
+            <canvas
+              ref={canvasRef}
+              className="block w-full h-full"
+            />
           </div>
         </div>
 
