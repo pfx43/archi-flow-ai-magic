@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Canvas as FabricCanvas, Rect, Circle, FabricText, Shadow, Line } from 'fabric';
 
@@ -104,6 +103,14 @@ export class ArchitectureGenerator {
       { from: 'attention', to: 'classifier', type: 'forward' },
     ];
 
+    this.createNodes(nodes);
+    this.createConnections(nodes, connections);
+    this.canvas.renderAll();
+  }
+
+  generateFromData(nodes: ArchitectureNode[], connections: ArchitectureConnection[]) {
+    this.canvas.clear();
+    this.addDotGridBackground();
     this.createNodes(nodes);
     this.createConnections(nodes, connections);
     this.canvas.renderAll();

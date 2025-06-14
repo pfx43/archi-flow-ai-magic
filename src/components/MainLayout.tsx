@@ -40,8 +40,8 @@ export const MainLayout = () => {
     if (!canvasRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: window.innerWidth - (isFullscreen ? 0 : 320),
-      height: window.innerHeight - (isFullscreen ? 0 : 64),
+      width: window.innerWidth,
+      height: window.innerHeight,
       backgroundColor: '#FFFFFF',
     });
 
@@ -49,15 +49,54 @@ export const MainLayout = () => {
     
     const generator = new ArchitectureGenerator(canvas);
     setArchGenerator(generator);
-
-    // Add dot grid background
+    
     addDotGridBackground(canvas);
+
+    // Panning logic
+    let isPanning = false;
+    let lastPosX = 0;
+    let lastPosY = 0;
+
+    canvas.on('mouse:down', function(opt) {
+        const evt = opt.e;
+        if (evt.button === 1) { // Middle mouse button
+            isPanning = true;
+            lastPosX = evt.clientX;
+            lastPosY = evt.clientY;
+            canvas.defaultCursor = 'grabbing';
+            canvas.requestRenderAll();
+        }
+    });
+
+    canvas.on('mouse:move', function(opt) {
+        if (isPanning) {
+            const e = opt.e;
+            const vpt = this.viewportTransform;
+            if (vpt) {
+                vpt[4] += e.clientX - lastPosX;
+                vpt[5] += e.clientY - lastPosY;
+                this.requestRenderAll();
+            }
+            lastPosX = e.clientX;
+            lastPosY = e.clientY;
+        }
+    });
+
+    canvas.on('mouse:up', function() {
+        if (isPanning) {
+            this.setViewportTransform(this.viewportTransform || [1, 0, 0, 1, 0, 0]);
+            isPanning = false;
+            canvas.defaultCursor = 'default';
+            canvas.requestRenderAll();
+        }
+    });
 
     const handleResize = () => {
       canvas.setDimensions({
-        width: window.innerWidth - (isFullscreen ? 0 : 320),
-        height: window.innerHeight - (isFullscreen ? 0 : 64),
+        width: window.innerWidth,
+        height: window.innerHeight,
       });
+      addDotGridBackground(canvas);
       canvas.renderAll();
     };
 
@@ -70,9 +109,17 @@ export const MainLayout = () => {
   }, [isFullscreen]);
 
   const addDotGridBackground = (canvas: FabricCanvas) => {
+    canvas.getObjects('rect').forEach(obj => {
+        if(obj.get('type') === 'grid-dot') canvas.remove(obj)
+    });
+    canvas.getObjects('circle').forEach(obj => {
+        if(obj.get('type') === 'grid-dot') canvas.remove(obj)
+    });
+
     const spacing = 20;
-    const canvasWidth = canvas.width || 1200;
-    const canvasHeight = canvas.height || 800;
+    const canvasWidth = canvas.width || window.innerWidth;
+    const canvasHeight = canvas.height || window.innerHeight;
+    const gridGroup = []
 
     for (let x = 0; x <= canvasWidth; x += spacing) {
       for (let y = 0; y <= canvasHeight; y += spacing) {
@@ -83,11 +130,14 @@ export const MainLayout = () => {
           fill: '#E5E7EB',
           selectable: false,
           evented: false,
+          // @ts-ignore
+          type: 'grid-dot'
         });
-        canvas.add(dot);
-        canvas.sendObjectToBack(dot);
+        gridGroup.push(dot)
       }
     }
+    canvas.add(...gridGroup);
+    gridGroup.forEach(dot => canvas.sendObjectToBack(dot));
   };
 
   const callDoubaoApi = async (content: string) => {
@@ -123,32 +173,90 @@ export const MainLayout = () => {
     }
   };
 
+  const callDoubaoVisionApi = async (base64Image: string) => {
+    try {
+      const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'doubao-pro-32k',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `请分析这张架构图，并以JSON格式返回其节点和连接。JSON应该包含一个'nodes'数组和一个'connections'数组。
+                  每个节点应有 'id', 'label', 'x', 'y'。
+                  每个连接应有 'from'和 'to'，使用节点的id。
+                  节点的x, y坐标应大致反映其在图像中的相对位置。`
+                },
+                {
+                  type: 'image_url',
+                  image_url: { url: base64Image }
+                }
+              ]
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('豆包Vision API调用失败:', error);
+      throw error;
+    }
+  };
+
   const handleGenerate = async () => {
     if (!inputText.trim() || !archGenerator) return;
     
     setIsGenerating(true);
     
     try {
-      // Determine architecture type based on input
-      if (inputText.includes('multimodal') || inputText.includes('多模态') || inputText.includes('text') && inputText.includes('image')) {
-        archGenerator.generateMultiModalArchitecture();
-      } else if (inputText.includes('spectral') || inputText.includes('频谱') || inputText.includes('graph') || inputText.includes('图')) {
-        archGenerator.generateSpectralDomainArchitecture();
-      } else {
-        // Call Doubao API for intelligent analysis
-        const aiResponse = await callDoubaoApi(inputText);
-        console.log('豆包API响应:', aiResponse);
-        
-        // Generate based on AI response
-        if (aiResponse.includes('multimodal') || aiResponse.includes('encoder')) {
-          archGenerator.generateMultiModalArchitecture();
-        } else {
-          archGenerator.generateSpectralDomainArchitecture();
+      const aiResponse = await callDoubaoApi(inputText);
+      console.log('豆包API响应:', aiResponse);
+      
+      try {
+        const architectureData = JSON.parse(aiResponse);
+        if (architectureData.nodes && architectureData.connections) {
+            const nodes = architectureData.nodes.map((n: any) => ({
+                id: n.id,
+                label: n.label,
+                type: 'process',
+                x: n.x || Math.random() * 800,
+                y: n.y || Math.random() * 600,
+                width: 120,
+                height: 60,
+                color: '#3B82F6'
+            }));
+            const connections = architectureData.connections;
+            archGenerator.generateFromData(nodes, connections);
+            setIsGenerating(false);
+            return;
         }
+      } catch (e) {
+          console.warn("AI响应不是有效的JSON，将回退到关键词匹配。");
+      }
+
+      // Fallback to keyword matching
+      if (aiResponse.includes('multimodal') || aiResponse.includes('多模态') || aiResponse.includes('encoder')) {
+        archGenerator.generateMultiModalArchitecture();
+      } else {
+        archGenerator.generateSpectralDomainArchitecture();
       }
     } catch (error) {
       console.error('生成失败:', error);
-      // Fallback to default generation
       if (archGenerator) {
         archGenerator.generateMultiModalArchitecture();
       }
@@ -159,7 +267,47 @@ export const MainLayout = () => {
 
   const handleImageUpload = (file: File) => {
     setInputMode('image');
-    console.log('图片上传成功:', file.name);
+    setIsGenerating(true);
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64Image = e.target?.result as string;
+        if (!base64Image || !archGenerator) return;
+
+        const aiResponse = await callDoubaoVisionApi(base64Image);
+        console.log('豆包Vision API响应:', aiResponse);
+        
+        const cleanedJsonResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+        const architectureData = JSON.parse(cleanedJsonResponse);
+
+        if (architectureData.nodes && architectureData.connections) {
+            const nodes = architectureData.nodes.map((n: any) => ({
+                id: n.id,
+                label: n.label,
+                type: 'process',
+                x: n.x || Math.random() * 800,
+                y: n.y || Math.random() * 600,
+                width: 120,
+                height: 60,
+                color: '#3B82F6'
+            }));
+            const connections = architectureData.connections;
+            archGenerator.generateFromData(nodes, connections);
+        } else {
+            throw new Error("从AI响应中解析JSON失败或格式不正确");
+        }
+      } catch (error) {
+        console.error('图片分析生成失败:', error);
+        // Fallback to a default architecture on error
+        if (archGenerator) {
+          archGenerator.generateMultiModalArchitecture();
+        }
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleToolClick = (tool: typeof activeTool) => {
@@ -237,10 +385,17 @@ export const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="flex h-screen">
-        {/* Left Sidebar - Tools & Templates */}
-        <div className="w-80 bg-white/30 backdrop-blur-xl border-r border-white/20 p-6 flex flex-col gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
+        {/* Center Canvas - positioned at the bottom layer */}
+        <div className="absolute inset-0 z-0">
+            <canvas
+              ref={canvasRef}
+              className="block w-full h-full"
+            />
+        </div>
+
+        {/* Left Sidebar - floating on top */}
+        <div className="absolute top-0 left-0 h-full w-80 bg-white/30 backdrop-blur-xl border-r border-white/20 p-6 flex flex-col gap-6 z-20 overflow-y-auto">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-xl flex items-center justify-center">
@@ -290,7 +445,6 @@ export const MainLayout = () => {
 
               <div className="flex gap-2">
                 <ImageUploadHandler
-                  fabricCanvas={fabricCanvas}
                   onImageUpload={handleImageUpload}
                 />
                 <label htmlFor="file-upload" className="flex-1">
@@ -309,7 +463,7 @@ export const MainLayout = () => {
                 className="w-full bg-gradient-to-r from-indigo-500 to-cyan-400 hover:from-indigo-600 hover:to-cyan-500 text-white font-medium py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {isGenerating ? (
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-center">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                     豆包AI生成中...
                   </div>
@@ -421,10 +575,8 @@ export const MainLayout = () => {
           </Card>
         </div>
 
-        {/* Center Canvas */}
-        <div className="flex-1 flex flex-col">
-          {/* Top Bar */}
-          <div className="h-16 bg-white/30 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6">
+        {/* Top Bar - floating */}
+        <div className={`absolute top-0 h-16 bg-white/30 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6 z-10`} style={{ left: '20rem', right: showProperties ? '20rem' : '0' }}>
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-800">架构图设计</h2>
               <Badge variant="outline" className="text-xs">实时编辑</Badge>
@@ -448,20 +600,11 @@ export const MainLayout = () => {
                 <Settings className="w-4 h-4" />
               </Button>
             </div>
-          </div>
-
-          {/* Canvas Area */}
-          <div className="flex-1 bg-white relative overflow-hidden">
-            <canvas
-              ref={canvasRef}
-              className="block w-full h-full"
-            />
-          </div>
         </div>
 
-        {/* Right Properties Panel */}
+        {/* Right Properties Panel - floating */}
         {showProperties && (
-          <div className="w-80 bg-white/30 backdrop-blur-xl border-l border-white/20 p-6 animate-slide-in-right">
+          <div className="absolute top-0 right-0 h-full w-80 bg-white/30 backdrop-blur-xl border-l border-white/20 p-6 animate-slide-in-right z-20">
             <Card className="p-4 bg-white/50 backdrop-blur-sm border-white/30">
               <h3 className="text-sm font-medium text-gray-700 mb-4">属性面板</h3>
               <div className="space-y-4">
@@ -487,7 +630,6 @@ export const MainLayout = () => {
             </Card>
           </div>
         )}
-      </div>
     </div>
   );
 };
