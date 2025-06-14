@@ -388,7 +388,8 @@ export const MainLayout = () => {
 
     // Temporarily set background to white for export if needed
     const originalBg = fabricCanvas.backgroundColor;
-    fabricCanvas.setBackgroundColor('#FFFFFF', fabricCanvas.renderAll.bind(fabricCanvas));
+    fabricCanvas.backgroundColor = '#FFFFFF';
+    fabricCanvas.renderAll();
 
     const download = (url: string, filename: string) => {
       const a = document.createElement('a');
@@ -406,6 +407,7 @@ export const MainLayout = () => {
       const dataUrl = fabricCanvas.toDataURL({
         format: 'png',
         quality: 1,
+        multiplier: 1,
       });
       download(dataUrl, 'architecture.png');
     } else { // svg
@@ -416,7 +418,8 @@ export const MainLayout = () => {
     }
 
     // Restore original background color
-    fabricCanvas.setBackgroundColor(originalBg || '#FFFFFF', fabricCanvas.renderAll.bind(fabricCanvas));
+    fabricCanvas.backgroundColor = originalBg || '#FFFFFF';
+    fabricCanvas.renderAll();
   };
 
   if (isFullscreen) {
